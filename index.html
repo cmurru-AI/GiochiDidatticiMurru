@@ -1,20 +1,636 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giochi Didattici - Carlo Murru</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giochi Didattici · Carlo Murru</title>
+
+  <style>
+    :root {
+      --blu: #3b5bdb;
+      --viola: #7c3aed;
+      --rosa: #ff4d8d;
+      --giallo: #ffd43b;
+      --verde: #2ec4b6;
+      --arancio: #ff922b;
+      --nero: #1f2937;
+      --grigio: #6b7280;
+      --sfondo: #f7f8fc;
+      --bianco: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--sfondo);
+      color: var(--nero);
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .topbar {
+      background: var(--bianco);
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      border-bottom: 1px solid #eceff4;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .brand span:nth-child(1) {
+      color: var(--viola);
+    }
+
+    .brand span:nth-child(2) {
+      color: var(--rosa);
+    }
+
+    .nav {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .nav a {
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .nav a:hover {
+      color: var(--viola);
+    }
+
+    .hero {
+      padding: 80px 24px 70px;
+      background:
+        radial-gradient(circle at top left, rgba(255,212,59,0.9), transparent 30%),
+        radial-gradient(circle at top right, rgba(255,77,141,0.45), transparent 30%),
+        linear-gradient(135deg, #5f3dc4 0%, #3b5bdb 55%, #2ec4b6 100%);
+      color: white;
+      overflow: hidden;
+    }
+
+    .hero-inner {
+      max-width: 1180px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1.3fr 0.7fr;
+      align-items: center;
+      gap: 40px;
+    }
+
+    .hero h1 {
+      font-size: clamp(44px, 7vw, 82px);
+      line-height: 0.95;
+      margin: 0 0 24px;
+      font-weight: 900;
+      letter-spacing: -2px;
+    }
+
+    .hero h1 span {
+      display: inline-block;
+      background: var(--giallo);
+      color: var(--nero);
+      padding: 4px 10px 8px;
+      border-radius: 16px;
+      transform: rotate(-2deg);
+    }
+
+    .hero p {
+      max-width: 720px;
+      font-size: 21px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      padding: 14px 22px;
+      border-radius: 14px;
+      font-weight: 800;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-3px);
+    }
+
+    .btn-primary {
+      background: var(--giallo);
+      color: var(--nero);
+      box-shadow: 0 8px 0 rgba(0,0,0,0.18);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.16);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.7);
+    }
+
+    .hero-art {
+      position: relative;
+      min-height: 330px;
+    }
+
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+    }
+
+    .bubble.one {
+      width: 145px;
+      height: 145px;
+      background: var(--giallo);
+      top: 10px;
+      left: 40px;
+      transform: rotate(-8deg);
+    }
+
+    .bubble.two {
+      width: 120px;
+      height: 120px;
+      background: var(--rosa);
+      top: 130px;
+      right: 20px;
+      transform: rotate(8deg);
+    }
+
+    .bubble.three {
+      width: 165px;
+      height: 165px;
+      background: var(--verde);
+      bottom: 0;
+      left: 90px;
+      transform: rotate(-4deg);
+    }
+
+    main {
+      max-width: 1180px;
+      margin: auto;
+      padding: 70px 24px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .section-head p {
+      margin: 8px 0 0;
+      color: var(--grigio);
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+
+    .filter {
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: none;
+      font-weight: 700;
+      background: white;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.07);
+      cursor: pointer;
+    }
+
+    .filter:nth-child(1) {
+      background: var(--nero);
+      color: white;
+    }
+
+    .filter:nth-child(2) {
+      background: #dbe4ff;
+      color: #2442a8;
+    }
+
+    .filter:nth-child(3) {
+      background: #ffe3ec;
+      color: #b4235a;
+    }
+
+    .filter:nth-child(4) {
+      background: #d3f9d8;
+      color: #1b7a35;
+    }
+
+    .filter:nth-child(5) {
+      background: #fff3bf;
+      color: #8a6400;
+    }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border: 3px solid transparent;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.12);
+    }
+
+    .card.visual-one {
+      border-color: var(--giallo);
+    }
+
+    .card.visual-two {
+      border-color: var(--verde);
+    }
+
+    .card.visual-three {
+      border-color: var(--rosa);
+    }
+
+    .card-top {
+      min-height: 180px;
+      padding: 24px;
+      display: flex;
+      align-items: end;
+      font-size: 62px;
+    }
+
+    .visual-one .card-top {
+      background: linear-gradient(135deg, #ffe066, #ff922b);
+    }
+
+    .visual-two .card-top {
+      background: linear-gradient(135deg, #63e6be, #15aabf);
+    }
+
+    .visual-three .card-top {
+      background: linear-gradient(135deg, #faa2c1, #845ef7);
+    }
+
+    .card-body {
+      padding: 24px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+      background: #eef2ff;
+      color: var(--blu);
+    }
+
+    .card h3 {
+      font-size: 24px;
+      margin: 0 0 10px;
+    }
+
+    .card p {
+      color: var(--grigio);
+      line-height: 1.5;
+      min-height: 68px;
+    }
+
+    .card-footer {
+      margin-top: 20px;
+    }
+
+    .play {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 12px;
+      text-decoration: none;
+      background: var(--nero);
+      color: white;
+      font-weight: 800;
+    }
+
+    .play:hover {
+      background: var(--viola);
+    }
+
+    .ia-section {
+      margin-top: 85px;
+      border-radius: 30px;
+      padding: 45px;
+      background:
+        linear-gradient(135deg, #111827 0%, #312e81 55%, #6d28d9 100%);
+      color: white;
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr;
+      gap: 32px;
+      align-items: center;
+    }
+
+    .ia-section h2 {
+      font-size: 40px;
+      margin-top: 0;
+      margin-bottom: 14px;
+    }
+
+    .ia-section p {
+      font-size: 18px;
+      line-height: 1.5;
+      color: #e5e7eb;
+    }
+
+    .ia-box {
+      background: white;
+      color: var(--nero);
+      padding: 24px;
+      border-radius: 20px;
+      transform: rotate(2deg);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+
+    .ia-box strong {
+      display: block;
+      font-size: 19px;
+      margin-bottom: 8px;
+    }
+
+    .coming {
+      display: inline-block;
+      margin-top: 10px;
+      background: var(--giallo);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--nero);
+    }
+
+    footer {
+      margin-top: 70px;
+      background: var(--nero);
+      color: white;
+      padding: 36px 24px;
+    }
+
+    .footer-inner {
+      max-width: 1180px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .footer-inner strong {
+      font-size: 18px;
+    }
+
+    @media (max-width: 850px) {
+      .hero-inner,
+      .ia-section {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-art {
+        min-height: 240px;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .nav {
+        display: none;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .hero {
+        padding-top: 55px;
+      }
+
+      .hero h1 {
+        font-size: 48px;
+      }
+
+      .games-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .ia-section {
+        padding: 30px 24px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-    <h1>Giochi Didattici</h1>
+  <header class="topbar">
+    <a href="#" class="brand">
+      <span>Gioca</span><span>Didattica</span>
+    </a>
 
-    <p>
-        Raccolta di giochi e attività didattiche interattive.
-    </p>
+    <nav class="nav">
+      <a href="#giochi">Giochi</a>
+      <a href="#ia">IA e Didattica</a>
+      <a href="#">Guide</a>
+      <a href="#">Risorse</a>
+    </nav>
+  </header>
 
-    <h2>Il sito è online!</h2>
+  <section class="hero">
+    <div class="hero-inner">
+
+      <div>
+        <h1>
+          Impara.<br>
+          <span>Gioca.</span><br>
+          Sperimenta.
+        </h1>
+
+        <p>
+          Una raccolta di giochi didattici interattivi, attività digitali
+          e risorse per rendere l'apprendimento più coinvolgente.
+        </p>
+
+        <div class="hero-buttons">
+          <a href="#giochi" class="btn btn-primary">🎮 Scopri i giochi</a>
+          <a href="#ia" class="btn btn-secondary">✨ IA e didattica</a>
+        </div>
+      </div>
+
+      <div class="hero-art">
+        <div class="bubble one">🎯</div>
+        <div class="bubble two">💡</div>
+        <div class="bubble three">🚀</div>
+      </div>
+
+    </div>
+  </section>
+
+  <main>
+
+    <section id="giochi">
+
+      <div class="section-head">
+        <div>
+          <h2>Giochi didattici</h2>
+          <p>Scegli un'attività e inizia subito.</p>
+        </div>
+      </div>
+
+      <div class="filters">
+        <button class="filter">Tutti</button>
+        <button class="filter">Matematica</button>
+        <button class="filter">Italiano</button>
+        <button class="filter">Scienze</button>
+        <button class="filter">Educazione civica</button>
+      </div>
+
+      <div class="games-grid">
+
+        <article class="card visual-one">
+          <div class="card-top">➗</div>
+
+          <div class="card-body">
+            <span class="tag">Matematica</span>
+
+            <h3>Gioco di prova</h3>
+
+            <p>
+              Un semplice gioco interattivo per verificare il funzionamento
+              della piattaforma.
+            </p>
+
+            <div class="card-footer">
+              <a class="play" href="giochi/primo-gioco/">
+                ▶ Gioca
+              </a>
+            </div>
+          </div>
+        </article>
+
+        <article class="card visual-two">
+          <div class="card-top">🧠</div>
+
+          <div class="card-body">
+            <span class="tag">In arrivo</span>
+
+            <h3>Nuovo gioco</h3>
+
+            <p>
+              Qui potremo inserire il prossimo gioco didattico del catalogo.
+            </p>
+
+            <div class="card-footer">
+              <span class="play">Prossimamente</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card visual-three">
+          <div class="card-top">🎨</div>
+
+          <div class="card-body">
+            <span class="tag">In arrivo</span>
+
+            <h3>Nuova attività</h3>
+
+            <p>
+              Uno spazio pronto per ospitare attività creative e interattive.
+            </p>
+
+            <div class="card-footer">
+              <span class="play">Prossimamente</span>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="ia-section" id="ia">
+
+      <div>
+        <h2>IA e didattica</h2>
+
+        <p>
+          Uno spazio dedicato a strumenti, esperienze, guide e novità
+          sull'uso dell'intelligenza artificiale nella scuola.
+        </p>
+
+        <p>
+          L'obiettivo sarà raccogliere risorse realmente utili per docenti,
+          con un'attenzione particolare alle applicazioni concrete.
+        </p>
+
+        <span class="coming">SEZIONE IN COSTRUZIONE</span>
+      </div>
+
+      <div class="ia-box">
+        <strong>✨ Prossimamente</strong>
+
+        Guide operative, prompt, strumenti, esperienze didattiche
+        e una selezione periodica delle novità più interessanti.
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <strong>GiocaDidattica</strong>
+      <span>Giochi, IA e innovazione didattica · Carlo Murru</span>
+    </div>
+  </footer>
 
 </body>
 </html>
