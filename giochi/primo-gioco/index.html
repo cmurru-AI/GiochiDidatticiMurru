@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gioco di prova</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f6fb;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .game {
+      width: 90%;
+      max-width: 600px;
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+      text-align: center;
+    }
+
+    h1 {
+      color: #174ea6;
+    }
+
+    .domanda {
+      font-size: 28px;
+      margin: 30px 0;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 14px 24px;
+      margin: 8px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #174ea6;
+      color: white;
+    }
+
+    button:hover {
+      background: #0d3579;
+    }
+
+    #risultato {
+      margin-top: 25px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="game">
+
+  <h1>🎮 Gioco di prova</h1>
+
+  <p class="domanda">
+    Quanto fa 7 × 8?
+  </p>
+
+  <button onclick="controlla(54)">54</button>
+  <button onclick="controlla(56)">56</button>
+  <button onclick="controlla(64)">64</button>
+
+  <div id="risultato"></div>
+
+</div>
+
+<script>
+function controlla(risposta) {
+
+  const risultato = document.getElementById("risultato");
+
+  if (risposta === 56) {
+    risultato.textContent = "✅ Risposta corretta!";
+    risultato.style.color = "green";
+  } else {
+    risultato.textContent = "❌ Riprova!";
+    risultato.style.color = "red";
+  }
+
+}
+</script>
+
+</body>
+</html>
