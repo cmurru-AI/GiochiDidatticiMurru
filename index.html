@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Officina Didattica</title>
+  <title>Officina Didattica · Carlo Murru</title>
 
   <style>
     :root {
@@ -104,10 +104,26 @@
     }
 
     .hero-copy {
-      padding: 85px 7%;
+      padding: 75px 7%;
       display: flex;
       flex-direction: column;
       justify-content: center;
+    }
+
+    .author-line {
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 18px;
+    }
+
+    .author-line span {
+      display: inline-block;
+      background: var(--fucsia);
+      color: var(--bianco);
+      padding: 6px 9px;
+      margin-right: 8px;
     }
 
     .eyebrow {
@@ -229,7 +245,7 @@
       letter-spacing: -15px;
     }
 
-    /* SECTION GENERAL */
+    /* GENERAL */
 
     .section {
       padding: 85px 7%;
@@ -263,7 +279,6 @@
     .audience-card {
       min-height: 330px;
       padding: 40px;
-      position: relative;
     }
 
     .audience-card:first-child {
@@ -308,7 +323,6 @@
       min-height: 260px;
       border-right: 3px solid var(--nero);
       border-bottom: 3px solid var(--nero);
-      position: relative;
       background: var(--bianco);
       transition: background 0.15s ease;
     }
@@ -437,6 +451,7 @@
       display: grid;
       grid-template-columns: 1.3fr 0.7fr;
       padding: 0;
+      border-bottom: 3px solid var(--nero);
     }
 
     .ia-copy {
@@ -481,30 +496,105 @@
       line-height: 1.4;
     }
 
+    /* CHI SONO */
+
+    .about {
+      display: grid;
+      grid-template-columns: 0.65fr 1.35fr;
+      border-bottom: 3px solid var(--nero);
+    }
+
+    .about-left {
+      background: var(--giallo);
+      padding: 70px 7%;
+      border-right: 3px solid var(--nero);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 500px;
+    }
+
+    .about-left .about-number {
+      font-size: 120px;
+      font-weight: 900;
+      letter-spacing: -8px;
+    }
+
+    .about-left h2 {
+      margin: 0;
+      font-size: 52px;
+      line-height: 0.95;
+      text-transform: uppercase;
+      letter-spacing: -2px;
+    }
+
+    .about-right {
+      padding: 70px 7%;
+      display: flex;
+      align-items: center;
+    }
+
+    .about-content {
+      max-width: 760px;
+    }
+
+    .about-name {
+      font-size: 40px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+
+    .about-role {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--blu);
+      margin-bottom: 28px;
+    }
+
+    .about-content p {
+      font-size: 20px;
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+
     /* FOOTER */
 
     footer {
       padding: 42px 7%;
+      background: var(--nero);
+      color: var(--bianco);
       display: flex;
       justify-content: space-between;
-      gap: 20px;
+      gap: 30px;
       flex-wrap: wrap;
-      border-top: 3px solid var(--nero);
     }
 
-    footer strong {
+    .footer-main strong {
+      display: block;
       text-transform: uppercase;
+      font-size: 18px;
+      margin-bottom: 8px;
     }
 
-    footer span {
-      color: var(--grigio-testo);
+    .footer-main span,
+    .footer-author {
+      color: #cfcfcf;
+      line-height: 1.5;
+    }
+
+    .footer-author {
+      text-align: right;
     }
 
     /* RESPONSIVE */
 
     @media (max-width: 950px) {
+
       .hero,
-      .ia {
+      .ia,
+      .about {
         grid-template-columns: 1fr;
       }
 
@@ -535,30 +625,83 @@
         border-left: none;
         border-top: 3px solid var(--bianco);
       }
+
+      .about-left {
+        border-right: none;
+        border-bottom: 3px solid var(--nero);
+        min-height: 300px;
+      }
     }
 
     @media (max-width: 650px) {
+
       nav {
         display: none;
       }
 
       .topbar {
         min-height: 65px;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .logo {
+        font-size: 18px;
       }
 
       .hero-copy,
       .section,
-      .ia-copy {
+      .ia-copy,
+      .about-left,
+      .about-right {
         padding-left: 24px;
         padding-right: 24px;
       }
 
+      .hero-copy {
+        padding-top: 55px;
+        padding-bottom: 55px;
+      }
+
       .hero h1 {
+        font-size: 52px;
+        line-height: 0.92;
         letter-spacing: -3px;
+      }
+
+      .author-line {
+        font-size: 11px;
+        line-height: 1.8;
       }
 
       .hero-text {
         font-size: 18px;
+      }
+
+      .hero-visual {
+        min-height: 300px;
+      }
+
+      .shape-1 {
+        width: 170px;
+        height: 170px;
+        left: 30px;
+        top: 40px;
+      }
+
+      .shape-2 {
+        width: 140px;
+        height: 140px;
+      }
+
+      .shape-3 {
+        width: 80px;
+        height: 240px;
+      }
+
+      .big-number {
+        font-size: 110px;
+        left: 25px;
       }
 
       .resource-grid {
@@ -573,16 +716,49 @@
         font-size: 38px;
       }
 
-      .shape-1 {
-        left: 30px;
+      .ia-side {
+        min-height: 320px;
+        padding: 30px 24px;
+      }
+
+      .ia-side .number {
+        font-size: 90px;
+      }
+
+      .about-left .about-number {
+        font-size: 90px;
+      }
+
+      .about-left h2 {
+        font-size: 42px;
+      }
+
+      .about-name {
+        font-size: 32px;
+      }
+
+      .about-content p {
+        font-size: 17px;
+      }
+
+      footer {
+        flex-direction: column;
+      }
+
+      .footer-author {
+        text-align: left;
       }
     }
   </style>
 </head>
 
+
 <body>
 
+  <!-- HEADER -->
+
   <header class="topbar">
+
     <a href="#" class="logo">
       Officina <span>Didattica</span>
     </a>
@@ -591,14 +767,22 @@
       <a href="#risorse">Risorse</a>
       <a href="#giochi">Giochi</a>
       <a href="#ia">IA e didattica</a>
-      <a href="#progetti">Progetti</a>
+      <a href="#chisono">Chi sono</a>
     </nav>
+
   </header>
 
+
+  <!-- HERO -->
 
   <section class="hero">
 
     <div class="hero-copy">
+
+      <div class="author-line">
+        <span>Carlo Murru</span>
+        Animatore Digitale · Istituto Comprensivo Villamar
+      </div>
 
       <div class="eyebrow">
         Didattica · Risorse · Innovazione
@@ -617,6 +801,7 @@
       </p>
 
       <div class="hero-buttons">
+
         <a href="#risorse" class="button primary">
           Esplora le risorse →
         </a>
@@ -624,21 +809,26 @@
         <a href="#ia" class="button secondary">
           IA e didattica
         </a>
+
       </div>
 
     </div>
 
 
     <div class="hero-visual">
+
       <div class="shape shape-1"></div>
       <div class="shape shape-2"></div>
       <div class="shape shape-3"></div>
 
       <div class="big-number">01</div>
+
     </div>
 
   </section>
 
+
+  <!-- STUDENTI / DOCENTI -->
 
   <section class="section">
 
@@ -651,9 +841,11 @@
       Officina Didattica?
     </h2>
 
+
     <div class="audiences">
 
       <div class="audience-card">
+
         <div class="audience-number">01</div>
 
         <h3>Studenti</h3>
@@ -662,10 +854,12 @@
           Giochi interattivi, mappe, materiali di ripasso,
           esercizi e risorse per imparare ed esercitarsi.
         </p>
+
       </div>
 
 
       <div class="audience-card">
+
         <div class="audience-number">02</div>
 
         <h3>Docenti</h3>
@@ -674,12 +868,15 @@
           Unità didattiche, strumenti, guide operative,
           prompt, attività e materiali pronti da usare.
         </p>
+
       </div>
 
     </div>
 
   </section>
 
+
+  <!-- RISORSE -->
 
   <section class="section" id="risorse">
 
@@ -692,9 +889,11 @@
       didattiche
     </h2>
 
+
     <div class="resource-grid">
 
       <div class="resource">
+
         <div class="resource-index">01</div>
 
         <h3>Giochi</h3>
@@ -702,10 +901,12 @@
         <p>
           Attività interattive da utilizzare direttamente nel browser.
         </p>
+
       </div>
 
 
       <div class="resource">
+
         <div class="resource-index">02</div>
 
         <h3>Mappe</h3>
@@ -713,10 +914,12 @@
         <p>
           Schemi, mappe mentali e materiali visuali per comprendere e ripassare.
         </p>
+
       </div>
 
 
       <div class="resource">
+
         <div class="resource-index">03</div>
 
         <h3>Unità didattiche</h3>
@@ -724,10 +927,12 @@
         <p>
           Percorsi e attività strutturate per il lavoro in classe.
         </p>
+
       </div>
 
 
       <div class="resource">
+
         <div class="resource-index">04</div>
 
         <h3>Strumenti</h3>
@@ -735,12 +940,15 @@
         <p>
           Guide, prompt e risorse digitali per studenti e docenti.
         </p>
+
       </div>
 
     </div>
 
   </section>
 
+
+  <!-- GIOCHI -->
 
   <section class="section games" id="giochi">
 
@@ -847,6 +1055,8 @@
   </section>
 
 
+  <!-- IA -->
+
   <section class="ia" id="ia">
 
     <div class="ia-copy">
@@ -889,15 +1099,88 @@
   </section>
 
 
+  <!-- CHI SONO -->
+
+  <section class="about" id="chisono">
+
+    <div class="about-left">
+
+      <div class="about-number">
+        05
+      </div>
+
+      <h2>
+        Chi<br>
+        sono
+      </h2>
+
+    </div>
+
+
+    <div class="about-right">
+
+      <div class="about-content">
+
+        <div class="section-label">
+          Officina Didattica
+        </div>
+
+        <div class="about-name">
+          Carlo Murru
+        </div>
+
+        <div class="about-role">
+          Animatore Digitale · Istituto Comprensivo Villamar
+        </div>
+
+        <p>
+          Sono Carlo Murru, docente e Animatore Digitale dell’Istituto Comprensivo Villamar.
+          Mi occupo di innovazione didattica, tecnologie educative,
+          intelligenza artificiale e progettazione di attività digitali per la scuola.
+        </p>
+
+        <p>
+          Officina Didattica nasce come spazio di raccolta e sperimentazione:
+          giochi, risorse, mappe, unità didattiche, strumenti e idee pensati
+          per essere utilizzati concretamente da studenti e docenti.
+        </p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- FOOTER -->
+
   <footer>
 
-    <strong>
-      Officina Didattica
-    </strong>
+    <div class="footer-main">
 
-    <span>
-      Materiali, idee e strumenti per imparare e insegnare meglio.
-    </span>
+      <strong>
+        Officina Didattica
+      </strong>
+
+      <span>
+        Materiali, idee e strumenti per imparare e insegnare meglio.
+      </span>
+
+    </div>
+
+
+    <div class="footer-author">
+
+      <strong>
+        Carlo Murru
+      </strong>
+
+      <br>
+
+      Animatore Digitale<br>
+      Istituto Comprensivo Villamar
+
+    </div>
 
   </footer>
 
