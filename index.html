@@ -6,6 +6,10 @@
 
   <title>Officina Didattica · Carlo Murru</title>
 
+  <script>
+    document.documentElement.classList.add("js");
+  </script>
+
   <style>
     :root {
       --nero: #111111;
@@ -35,6 +39,43 @@
 
     a {
       color: inherit;
+    }
+
+    /* ACCESSIBILITÀ */
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 3px solid var(--blu);
+      outline-offset: 3px;
+    }
+
+    .ia a:focus-visible,
+    footer a:focus-visible {
+      outline-color: var(--giallo);
+    }
+
+    .skip-link {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 200;
+      padding: 12px 18px;
+      background: var(--giallo);
+      color: var(--nero);
+      border: 3px solid var(--nero);
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-decoration: none;
+      transform: translateY(-200%);
+    }
+
+    .skip-link:focus {
+      transform: none;
+    }
+
+    main:focus {
+      outline: none;
     }
 
     /* HEADER */
@@ -90,8 +131,27 @@
       transition: width 0.2s ease;
     }
 
-    nav a:hover::after {
+    nav a:hover::after,
+    nav a:focus-visible::after {
       width: 100%;
+    }
+
+    .menu-toggle {
+      display: none;
+      min-height: 44px;
+      padding: 0 16px;
+      border: 3px solid var(--nero);
+      background: var(--bianco);
+      color: var(--nero);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .menu-toggle[aria-expanded="true"] {
+      background: var(--giallo);
     }
 
     /* HERO */
@@ -121,7 +181,7 @@
     .author-line span {
       display: inline-block;
       background: var(--fucsia);
-      color: var(--bianco);
+      color: var(--nero);
       padding: 6px 9px;
       margin-right: 8px;
     }
@@ -190,6 +250,14 @@
 
     .button.secondary:hover {
       background: var(--giallo);
+    }
+
+    .button.status {
+      background: transparent;
+      color: var(--bianco);
+      border-color: var(--bianco);
+      border-style: dashed;
+      cursor: default;
     }
 
     /* HERO VISUAL */
@@ -635,14 +703,57 @@
 
     @media (max-width: 650px) {
 
-      nav {
-        display: none;
-      }
-
       .topbar {
         min-height: 65px;
         padding-left: 20px;
         padding-right: 20px;
+        flex-wrap: wrap;
+      }
+
+      nav {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 4px 20px;
+        padding-bottom: 12px;
+      }
+
+      .js .menu-toggle {
+        display: block;
+      }
+
+      .js nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        gap: 0;
+        padding: 0;
+        background: var(--bianco);
+        border-bottom: 3px solid var(--nero);
+      }
+
+      .js nav.is-open {
+        display: flex;
+      }
+
+      .js nav a {
+        padding: 16px 20px;
+        border-top: 2px solid var(--nero);
+      }
+
+      .js nav a::after {
+        display: none;
+      }
+
+      .js nav a:hover,
+      .js nav a:focus-visible {
+        background: var(--giallo);
+      }
+
+      .js nav a:focus-visible {
+        outline-offset: -5px;
       }
 
       .logo {
@@ -755,15 +866,21 @@
 
 <body>
 
+  <a href="#contenuto" class="skip-link">Salta al contenuto</a>
+
   <!-- HEADER -->
 
   <header class="topbar">
 
-    <a href="#" class="logo">
+    <a href="./" class="logo">
       Officina <span>Didattica</span>
     </a>
 
-    <nav>
+    <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu-principale">
+      Menu
+    </button>
+
+    <nav id="menu-principale" aria-label="Menu principale">
       <a href="#risorse">Risorse</a>
       <a href="#giochi">Giochi</a>
       <a href="#ia">IA e didattica</a>
@@ -772,6 +889,8 @@
 
   </header>
 
+
+  <main id="contenuto" tabindex="-1">
 
   <!-- HERO -->
 
@@ -1076,9 +1195,9 @@
         nella scuola in modo consapevole e utile.
       </p>
 
-      <a href="#" class="button secondary">
-        Sezione in costruzione →
-      </a>
+      <span class="button status">
+        Sezione in preparazione
+      </span>
 
     </div>
 
@@ -1151,6 +1270,8 @@
 
   </section>
 
+  </main>
+
 
   <!-- FOOTER -->
 
@@ -1183,6 +1304,35 @@
     </div>
 
   </footer>
+
+  <script>
+    (function () {
+      var toggle = document.querySelector(".menu-toggle");
+      var menu = document.getElementById("menu-principale");
+
+      function setMenu(open) {
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        menu.classList.toggle("is-open", open);
+      }
+
+      toggle.addEventListener("click", function () {
+        setMenu(toggle.getAttribute("aria-expanded") !== "true");
+      });
+
+      menu.addEventListener("click", function (event) {
+        if (event.target.closest("a")) {
+          setMenu(false);
+        }
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && toggle.getAttribute("aria-expanded") === "true") {
+          setMenu(false);
+          toggle.focus();
+        }
+      });
+    })();
+  </script>
 
 </body>
 </html>
