@@ -359,6 +359,43 @@ nav a[aria-current="page"]::after {
   letter-spacing: -2px;
 }
 
+.audience-card {
+  position: relative;
+}
+
+.audience-link {
+  text-decoration: none;
+}
+
+/* Tutta la card è cliccabile */
+.audience-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.audience-link:focus-visible {
+  outline: none;
+}
+
+.audience-card:has(.audience-link:focus-visible) {
+  outline: 4px solid var(--nero);
+  outline-offset: -12px;
+}
+
+.audience-go {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  border-bottom: 3px solid var(--nero);
+}
+
+.audience-card:hover .audience-go {
+  border-bottom-color: transparent;
+}
+
 .audience-card p {
   font-size: 18px;
   max-width: 480px;
@@ -717,6 +754,11 @@ footer {
   text-transform: uppercase;
   font-size: 18px;
   margin-bottom: 8px;
+}
+
+.footer-license {
+  display: block;
+  margin-top: 6px;
 }
 
 .footer-main span,

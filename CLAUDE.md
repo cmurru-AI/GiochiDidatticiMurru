@@ -151,6 +151,7 @@ Giochi;
 IA e Didattica;
 Chi sono.
 Gli elementi “Studenti”, “Docenti” e le principali categorie di risorse devono diventare progressivamente navigabili e funzionali, non solo decorativi.
+“Studenti” e “Docenti” non sono sezioni separate: sono porte d’ingresso al catalogo, già filtrato per destinatari. Un materiale adatto a entrambi compare in tutte e due.
 Non usare link `#` permanenti per funzioni inesistenti: se una sezione non è disponibile, preferire testo non cliccabile o stato “in preparazione”.
 ---
 9. CSS e componenti condivisi
@@ -247,7 +248,11 @@ Tipi ammessi
 Destinatari ammessi
 `studenti`
 `docenti`
-`entrambi`
+Un materiale adatto a entrambi riporta i due valori: `["studenti", "docenti"]`.
+Regola di assegnazione (la applica chi pubblica; Carlo può correggere nel riepilogo):
+`studenti`: lo studente lo usa da solo (gioco individuale, mappa per ripassare, scheda);
+`docenti`: serve al docente per guidare o progettare (gioco alla LIM, guida, unità didattica, prompt);
+entrambi i valori: funziona bene in tutti e due i modi.
 Stati ammessi
 `bozza`
 `in-revisione`
@@ -349,16 +354,12 @@ Non attribuire automaticamente all’IA la paternità dei materiali originali.
 Non modificare contenuti didattici sostanziali senza richiesta.
 ---
 16. Licenze
-Il progetto può contenere due categorie diverse:
-Codice
-Il codice del sito e dei giochi può avere una licenza software separata.
-Materiali didattici
-I materiali didattici originali possono avere una licenza Creative Commons separata.
-Non applicare automaticamente una licenza senza decisione esplicita di Carlo Murru.
-Quando la licenza verrà definita:
-aggiungere `LICENSE`;
-indicare chiaramente cosa copre;
-evitare ambiguità tra codice e materiali.
+Decisione di Carlo Murru (ottobre 2026), descritta nel file `LICENSE`:
+giochi, materiali per studenti e docenti (mappe, schede, immagini, unità didattiche) e codice del sito: CC BY-NC-SA 4.0, un’unica licenza per tutto il repository;
+articoli, sintesi e report originali di “IA e Didattica”: CC BY 4.0;
+contenuti di terzi (articoli, immagini, marchi): restano dei loro autori e non sono coperti da queste licenze.
+Prima di pubblicare, verificare che eventuali immagini o testi di terzi presenti in un materiale possano essere usati.
+Non cambiare licenza senza decisione esplicita di Carlo Murru.
 ---
 17. Privacy
 Principio iniziale:
