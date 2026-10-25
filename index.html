@@ -457,19 +457,35 @@
       display: flex;
       align-items: flex-end;
       border-bottom: 3px solid var(--nero);
+      position: relative;
     }
 
-    .game-card:nth-child(1) .game-cover {
+    .game-card:nth-child(3n+1) .game-cover {
       background: var(--blu);
       color: var(--bianco);
     }
 
-    .game-card:nth-child(2) .game-cover {
+    .game-card:nth-child(3n+2) .game-cover {
       background: var(--giallo);
     }
 
-    .game-card:nth-child(3) .game-cover {
+    .game-card:nth-child(3n) .game-cover {
       background: var(--verde);
+    }
+
+    .game-cover img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .game-grid-message {
+      grid-column: 1 / -1;
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
     }
 
     .game-body {
@@ -1081,93 +1097,17 @@
     </h2>
 
 
-    <div class="game-grid">
+    <div class="game-grid" id="elenco-giochi" aria-live="polite">
 
-      <article class="game-card">
+      <p class="game-grid-message">
+        Caricamento dei giochi…
+      </p>
 
-        <div class="game-cover">
-          01
-        </div>
-
-        <div class="game-body">
-
-          <div class="tag">
-            Matematica
-          </div>
-
-          <h3>
-            Gioco di prova
-          </h3>
-
-          <p>
-            Il primo gioco pubblicato su Officina Didattica.
-          </p>
-
-          <a href="giochi/primo-gioco/" class="game-link">
-            Gioca ora →
-          </a>
-
-        </div>
-
-      </article>
-
-
-      <article class="game-card">
-
-        <div class="game-cover">
-          02
-        </div>
-
-        <div class="game-body">
-
-          <div class="tag">
-            Prossimamente
-          </div>
-
-          <h3>
-            Nuovo gioco
-          </h3>
-
-          <p>
-            Un nuovo contenuto interattivo sarà presto disponibile.
-          </p>
-
-          <span class="game-link">
-            In arrivo
-          </span>
-
-        </div>
-
-      </article>
-
-
-      <article class="game-card">
-
-        <div class="game-cover">
-          03
-        </div>
-
-        <div class="game-body">
-
-          <div class="tag">
-            Prossimamente
-          </div>
-
-          <h3>
-            Nuova attività
-          </h3>
-
-          <p>
-            Altre attività e materiali verranno aggiunti progressivamente.
-          </p>
-
-          <span class="game-link">
-            In arrivo
-          </span>
-
-        </div>
-
-      </article>
+      <noscript>
+        <p class="game-grid-message">
+          Per vedere l'elenco dei giochi attiva JavaScript nel browser.
+        </p>
+      </noscript>
 
     </div>
 
@@ -1306,6 +1246,109 @@
   </footer>
 
   <script>
+    // Elenco dei giochi generato da dati/catalogo.json
+    (function () {
+      var griglia = document.getElementById("elenco-giochi");
+      var MINIMO_CARD = 3;
+      var PERCORSO_VALIDO = /^[a-z0-9-]+(\/[a-z0-9-]+)*\/?$/;
+      var IMMAGINE_VALIDA = /^[a-z0-9-]+(\/[a-z0-9-]+)*\.(webp|png|jpg|jpeg|svg)$/;
+
+      function crea(tag, classe, testo) {
+        var el = document.createElement(tag);
+        if (classe) el.className = classe;
+        if (testo) el.textContent = testo;
+        return el;
+      }
+
+      function etichetta(valore) {
+        var testo = String(valore).replace(/-/g, " ");
+        return testo.charAt(0).toUpperCase() + testo.slice(1);
+      }
+
+      function creaCard(numero, dati) {
+        var card = crea("article", "game-card");
+        var cover = crea("div", "game-cover");
+        var body = crea("div", "game-body");
+
+        if (dati.copertina) {
+          var img = document.createElement("img");
+          img.src = dati.copertina;
+          img.alt = "";
+          cover.appendChild(img);
+        } else {
+          cover.textContent = String(numero).padStart(2, "0");
+        }
+
+        body.appendChild(crea("div", "tag", dati.tag));
+        body.appendChild(crea("h3", null, dati.titolo));
+        body.appendChild(crea("p", null, dati.descrizione));
+
+        if (dati.percorso) {
+          var link = crea("a", "game-link", "Gioca ora →");
+          link.href = dati.percorso;
+          body.appendChild(link);
+        } else {
+          body.appendChild(crea("span", "game-link", "In arrivo"));
+        }
+
+        card.appendChild(cover);
+        card.appendChild(body);
+        return card;
+      }
+
+      function valido(voce) {
+        var ok = voce && voce.id && voce.titolo && voce.descrizione &&
+          voce.tipo === "gioco" && voce.stato === "pubblicato" &&
+          PERCORSO_VALIDO.test(voce.percorso || "") &&
+          (!voce.copertina || IMMAGINE_VALIDA.test(voce.copertina));
+        if (voce && voce.tipo === "gioco" && voce.stato === "pubblicato" && !ok) {
+          console.warn("Voce del catalogo non valida:", voce.id || voce);
+        }
+        return ok;
+      }
+
+      function mostraGiochi(catalogo) {
+        var giochi = catalogo.filter(valido).sort(function (a, b) {
+          return (b.dataPubblicazione || "").localeCompare(a.dataPubblicazione || "");
+        });
+
+        griglia.textContent = "";
+
+        giochi.forEach(function (gioco, i) {
+          griglia.appendChild(creaCard(i + 1, {
+            tag: gioco.materia ? etichetta(gioco.materia) : "Gioco",
+            titolo: gioco.titolo,
+            descrizione: gioco.descrizione,
+            percorso: gioco.percorso,
+            copertina: gioco.copertina
+          }));
+        });
+
+        for (var n = giochi.length; n < MINIMO_CARD; n++) {
+          griglia.appendChild(creaCard(n + 1, {
+            tag: "Prossimamente",
+            titolo: n === giochi.length ? "Nuovo gioco" : "Nuova attività",
+            descrizione: n === giochi.length
+              ? "Un nuovo contenuto interattivo sarà presto disponibile."
+              : "Altre attività e materiali verranno aggiunti progressivamente."
+          }));
+        }
+      }
+
+      fetch("dati/catalogo.json")
+        .then(function (risposta) {
+          if (!risposta.ok) throw new Error(risposta.status);
+          return risposta.json();
+        })
+        .then(mostraGiochi)
+        .catch(function () {
+          griglia.textContent = "";
+          griglia.appendChild(crea("p", "game-grid-message",
+            "Al momento non è possibile caricare l'elenco dei giochi. Riprova più tardi."));
+        });
+    })();
+
+    // Menu mobile
     (function () {
       var toggle = document.querySelector(".menu-toggle");
       var menu = document.getElementById("menu-principale");
