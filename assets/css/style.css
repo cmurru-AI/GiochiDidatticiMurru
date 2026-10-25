@@ -747,16 +747,6 @@ html:not(.js) .solo-js {
   padding: 60px 7% 85px;
 }
 
-.ai-note {
-  border: 3px solid var(--nero);
-  border-left: 14px solid var(--verde);
-  background: var(--grigio);
-  padding: 18px 22px;
-  font-size: 16px;
-  line-height: 1.5;
-  margin: 0 0 60px;
-}
-
 .post-h2 {
   font-size: clamp(34px, 4vw, 52px);
   line-height: 0.95;
