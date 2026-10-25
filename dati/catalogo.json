@@ -23,5 +23,101 @@
       "problemi",
       "darija"
     ]
+  },
+  {
+    "id": "fantasy-fractions-quest",
+    "titolo": "Fantasy Fractions Quest",
+    "tipo": "gioco",
+    "materia": "matematica",
+    "classe": [
+      "2-secondaria"
+    ],
+    "destinatari": [
+      "studenti"
+    ],
+    "descrizione": "Cinque mondi e dieci domande a tempo su equivalenze, semplificazione, operazioni e problemi con le frazioni.",
+    "percorso": "giochi/fantasy-fractions-quest/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-25",
+    "paroleChiave": [
+      "frazioni",
+      "frazioni equivalenti",
+      "semplificazione",
+      "operazioni con le frazioni",
+      "problemi"
+    ]
+  },
+  {
+    "id": "sfida-frazioni",
+    "titolo": "Sfida Frazioni",
+    "tipo": "gioco",
+    "materia": "matematica",
+    "classe": [
+      "2-secondaria"
+    ],
+    "destinatari": [
+      "docenti"
+    ],
+    "descrizione": "Sfida alla LIM tra due squadre: quattro round a scelta multipla su semplificazione, confronto, operazioni e problemi.",
+    "percorso": "giochi/sfida-frazioni/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-25",
+    "paroleChiave": [
+      "frazioni",
+      "LIM",
+      "squadre",
+      "confronto",
+      "operazioni con le frazioni"
+    ]
+  },
+  {
+    "id": "missione-frazioni",
+    "titolo": "Missione frazioni",
+    "tipo": "gioco",
+    "materia": "matematica",
+    "classe": [
+      "2-secondaria"
+    ],
+    "destinatari": [
+      "docenti"
+    ],
+    "descrizione": "Sfida alla LIM per quattro squadre: domande aperte da discutere in gruppo, con soluzione da mostrare e segnapunti.",
+    "percorso": "giochi/missione-frazioni/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-25",
+    "paroleChiave": [
+      "frazioni",
+      "LIM",
+      "squadre",
+      "lavoro di gruppo",
+      "problemi"
+    ]
+  },
+  {
+    "id": "ponte-delle-frazioni",
+    "titolo": "Il Ponte delle Frazioni",
+    "tipo": "gioco",
+    "materia": "matematica",
+    "classe": [
+      "2-secondaria"
+    ],
+    "destinatari": [
+      "studenti"
+    ],
+    "descrizione": "Costruisci un ponte lungo esattamente quanto il burrone: dieci livelli su equivalenze, somme, frazioni improprie e decimali.",
+    "percorso": "giochi/ponte-delle-frazioni/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-25",
+    "paroleChiave": [
+      "frazioni",
+      "frazioni equivalenti",
+      "somme di frazioni",
+      "frazioni improprie",
+      "numeri decimali"
+    ]
   }
 ]
