@@ -674,6 +674,153 @@ html:not(.js) .solo-js {
   line-height: 1.4;
 }
 
+/* REPORT E ARTICOLI DI IA E DIDATTICA */
+
+.post-hero {
+  background: var(--nero);
+  color: var(--bianco);
+  padding: 85px 7% 70px;
+  border-bottom: 3px solid var(--nero);
+}
+
+.post-hero .section-label {
+  color: var(--verde);
+}
+
+.post-hero h1 {
+  font-size: clamp(42px, 6vw, 88px);
+  line-height: 0.92;
+  letter-spacing: -3px;
+  text-transform: uppercase;
+  margin: 0 0 24px;
+  max-width: 1000px;
+}
+
+.post-lead {
+  font-size: 21px;
+  line-height: 1.45;
+  max-width: 760px;
+  margin: 0 0 22px;
+}
+
+.post-meta {
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #d5d5d5;
+  margin: 0;
+}
+
+.post {
+  max-width: 920px;
+  padding: 60px 7% 85px;
+}
+
+.ai-note {
+  border: 3px solid var(--nero);
+  border-left: 14px solid var(--verde);
+  background: var(--grigio);
+  padding: 18px 22px;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0 0 60px;
+}
+
+.post-h2 {
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 0.95;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  margin: 0 0 28px;
+}
+
+.post-item {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 0 24px;
+  border-top: 3px solid var(--nero);
+  padding: 32px 0 40px;
+}
+
+.post-number {
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--blu);
+  letter-spacing: -3px;
+}
+
+.post-item h3 {
+  font-size: 28px;
+  line-height: 1.1;
+  margin: 0 0 16px;
+}
+
+.post-item p,
+.post-item li,
+.post-practice p {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.post-item ul {
+  padding-left: 22px;
+}
+
+.post-why {
+  background: var(--giallo);
+  border: 3px solid var(--nero);
+  padding: 16px 20px;
+  margin: 22px 0 16px;
+}
+
+.post-why p {
+  margin: 0;
+}
+
+.post-source {
+  font-size: 15px !important;
+  color: var(--grigio-testo);
+}
+
+.post-practice {
+  border-top: 3px solid var(--nero);
+  padding-top: 32px;
+  margin-top: 20px;
+}
+
+.prompt-box {
+  background: var(--nero);
+  color: var(--bianco);
+  border: 3px solid var(--nero);
+  padding: 24px;
+  margin: 18px 0;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 17px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.copy-status {
+  display: inline-block;
+  margin-left: 14px;
+  font-weight: 800;
+}
+
+.post-end {
+  border-top: 3px solid var(--nero);
+  margin-top: 50px;
+  padding-top: 24px;
+  font-size: 15px;
+  color: var(--grigio-testo);
+}
+
+.post-end a {
+  font-weight: 900;
+  color: var(--nero);
+}
+
 /* CHI SONO */
 
 .about {
@@ -943,6 +1090,23 @@ footer {
 
   .filter-label {
     width: 100%;
+  }
+
+  .post-hero {
+    padding: 55px 24px 45px;
+  }
+
+  .post {
+    padding: 40px 24px 60px;
+  }
+
+  .post-item {
+    grid-template-columns: 1fr;
+  }
+
+  .post-number {
+    font-size: 40px;
+    margin-bottom: 10px;
   }
 
   .audience-card {

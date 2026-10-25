@@ -119,5 +119,25 @@
       "frazioni improprie",
       "numeri decimali"
     ]
+  },
+  {
+    "id": "ia-in-classe-01",
+    "titolo": "IA in classe · Report n. 1",
+    "tipo": "report",
+    "materia": "interdisciplinare",
+    "destinatari": [
+      "docenti"
+    ],
+    "descrizione": "Il decreto IA in vigore, l'indagine INDIRE sui docenti e il documento europeo «Friend or foe?». Più un prompt per verificare senza IA.",
+    "percorso": "ia-didattica/ia-in-classe-01/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-25",
+    "paroleChiave": [
+      "intelligenza artificiale",
+      "normativa",
+      "formazione docenti",
+      "prompt"
+    ]
   }
 ]
