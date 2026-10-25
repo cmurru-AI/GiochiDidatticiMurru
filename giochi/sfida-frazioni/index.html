@@ -561,7 +561,14 @@ function renderQuestion() {
 
   // Risposte
   answerBox.innerHTML = "";
-  q.options.forEach((opt, i) => {
+  // Opzioni in ordine casuale: la risposta giusta non è sempre nella stessa posizione
+  const order = q.options.map((_, i) => i);
+  for (let k = order.length - 1; k > 0; k--) {
+    const j = Math.floor(Math.random() * (k + 1));
+    [order[k], order[j]] = [order[j], order[k]];
+  }
+  order.forEach(i => {
+    const opt = q.options[i];
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = opt;
@@ -611,7 +618,7 @@ function handleAnswer(index, btn) {
     btn.classList.add("wrong");
     soundWrong();
     // Evidenzia la corretta
-    buttons[q.correct].classList.add("correct");
+    answerBox.querySelector('[data-index="' + q.correct + '"]').classList.add("correct");
     feedback.className = "visible ko";
     feedback.innerHTML = "<strong>❌ Non è la risposta giusta.</strong>La soluzione è: " +
       q.options[q.correct] + ".<br>" + q.explain;
