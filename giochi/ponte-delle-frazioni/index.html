@@ -1,0 +1,404 @@
+<!doctype html><html lang="it"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Il Ponte delle Frazioni</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: schermo unico per LIM — barra in alto, scena grande al centro, listelli e comandi sotto */
+:root{
+  --sky:#d9ecf2; --sky2:#f3efe2; --rock:#c98f5a; --rock-dark:#8f5b33; --river:#5aa6c4;
+  --ink:#1f2a33; --muted:#56636e; --paper:#fbfaf6; --panel:#ffffff; --line:#d6d2c4;
+  --accent:#1d6f8f; --accent-ink:#ffffff; --ok:#2f8a4e; --bad:#c2412d; --bad-soft:#f6d5cd; --ok-soft:#d6efdd;
+  --d2:#e0a030; --d3:#4f9a5f; --d4:#3f7fc0; --d5:#a65fb8; --d6:#d0663f; --d8:#2f9e9a; --d10:#b8577a; --d12:#7a7f2e;
+  --team0:#c2412d; --team1:#2f62b0;
+  --f-display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --sky:#1b2a3a; --sky2:#283246; --rock:#8a6142; --rock-dark:#5c3d27; --river:#2f6f8a;
+  --ink:#eef1f3; --muted:#a9b4bd; --paper:#141b22; --panel:#1d2630; --line:#34414d;
+  --accent:#4fb3d6; --accent-ink:#0d1a22; --ok:#5cc27e; --bad:#ff7a63; --bad-soft:#4a2620; --ok-soft:#1f3d2a;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --sky:#1b2a3a; --sky2:#283246; --rock:#8a6142; --rock-dark:#5c3d27; --river:#2f6f8a;
+  --ink:#eef1f3; --muted:#a9b4bd; --paper:#141b22; --panel:#1d2630; --line:#34414d;
+  --accent:#4fb3d6; --accent-ink:#0d1a22; --ok:#5cc27e; --bad:#ff7a63; --bad-soft:#4a2620; --ok-soft:#1f3d2a;
+  color-scheme:dark }
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.4}
+.app{max-width:1400px;margin:0 auto;padding-inline:16px;padding-block:12px 20px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between}
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(1.5rem,2.6vw,2.2rem);margin:0;letter-spacing:-.01em}
+h1 small{display:block;font-family:var(--f-body);font-weight:400;font-size:.9rem;color:var(--muted);letter-spacing:0}
+.levels{display:flex;flex-wrap:wrap;gap:6px}
+.levels button{width:42px;height:42px;border-radius:50%;border:2px solid var(--line);background:var(--panel);color:var(--ink);font:700 1rem var(--f-body);cursor:pointer}
+.levels button.cur{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.levels button.done:not(.cur){border-color:var(--ok);color:var(--ok)}
+.toggles{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--ink);font:700 .95rem var(--f-body);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"]::before{content:"✓"}
+.brief{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:12px 18px}
+.brief h2{font-family:var(--f-display);font-weight:800;font-size:1.5rem;margin:0}
+.brief .goal{font-size:1.25rem}
+.brief .goal b{font-size:1.6rem;color:var(--accent)}
+.brief .rule{font-weight:700;color:var(--bad)}
+.teams{display:flex;gap:10px;margin-left:auto}
+.team{padding:6px 14px;border-radius:10px;border:3px solid transparent;font-weight:700;background:var(--paper)}
+.team.t0{color:var(--team0)} .team.t1{color:var(--team1)}
+.team.turn.t0{border-color:var(--team0)} .team.turn.t1{border-color:var(--team1)}
+.team b{font-size:1.4rem;margin-left:6px}
+.scene-wrap{position:relative;border-radius:16px;overflow:hidden;border:2px solid var(--line);background:var(--sky)}
+svg#scene{display:block;width:100%;height:auto;max-height:52vh}
+.sumbox{position:absolute;top:12px;right:14px;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:6px 14px;font-weight:700;font-size:1.2rem}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;font-variant-numeric:tabular-nums;margin:0 .1em}
+.fr>span:first-child{border-bottom:.08em solid currentColor;padding:0 .15em .08em}
+.fr>span:last-child{padding-top:.08em}
+.palette{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.piece{position:relative;display:flex;align-items:center;justify-content:center;height:72px;border-radius:8px;border:3px solid rgba(0,0,0,.25);color:#fff;font:700 1.35rem var(--f-body);cursor:pointer;text-shadow:0 1px 2px rgba(0,0,0,.45);background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.0) 0 14px,rgba(255,255,255,.12) 14px 16px)}
+.piece:disabled{opacity:.28;cursor:not-allowed}
+.piece .n{position:absolute;top:-12px;right:-10px;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-radius:999px;font-size:.85rem;padding:1px 8px;text-shadow:none}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{padding:14px 24px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--ink);font:700 1.15rem var(--f-body);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-size:1.3rem;padding:16px 32px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
+.hint{color:var(--muted);font-size:.95rem}
+.feedback{border-radius:14px;padding:14px 20px;font-size:1.3rem;font-weight:700;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center}
+.feedback.ok{background:var(--ok-soft);color:var(--ink);border:2px solid var(--ok)}
+.feedback.bad{background:var(--bad-soft);color:var(--ink);border:2px solid var(--bad)}
+.feedback .q{font-weight:400;font-size:1.15rem;flex-basis:100%}
+.feedback .q b{font-weight:700}
+details.teacher{background:var(--panel);border:2px dashed var(--line);border-radius:14px;padding:10px 18px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--muted)}
+details.teacher dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;margin:10px 0 4px}
+details.teacher dt{font-weight:700;color:var(--muted)}
+details.teacher dd{margin:0;min-width:0}
+@media (max-width:700px){ details.teacher dl{grid-template-columns:1fr} .piece{height:56px;font-size:1.1rem} }
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .5s}
+.home-link{display:inline-block;align-self:flex-start;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--ink);font-weight:700;font-size:15px;text-decoration:none}
+.home-link:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
+</style>
+
+<div class="app">
+  <a class="home-link" href="../../">← Officina Didattica</a>
+  <header>
+    <h1>Il Ponte delle Frazioni<small>Costruite un ponte lungo esattamente quanto il burrone</small></h1>
+    <nav class="levels" id="levels" aria-label="Livelli"></nav>
+    <div class="toggles">
+      <button class="chip" id="tGrid" aria-pressed="false">Righello fine</button>
+      <button class="chip" id="tSum" aria-pressed="false">Mostra somma</button>
+      <button class="chip" id="tTeams" aria-pressed="false">Due squadre</button>
+    </div>
+  </header>
+
+  <section class="brief" aria-live="polite">
+    <h2 id="lvTitle"></h2>
+    <div class="goal" id="lvGoal"></div>
+    <div class="rule" id="lvRule"></div>
+    <div class="teams" id="teams" hidden>
+      <div class="team t0" id="team0">Rossi<b id="s0">0</b></div>
+      <div class="team t1" id="team1">Blu<b id="s1">0</b></div>
+    </div>
+  </section>
+
+  <div class="scene-wrap">
+    <svg id="scene" viewBox="0 0 1000 400" role="img" aria-label="Burrone con il ponte in costruzione"></svg>
+    <div class="sumbox" id="sumbox" hidden></div>
+  </div>
+
+  <div class="palette" id="palette" aria-label="Listelli disponibili"></div>
+  <p class="hint">Toccate un listello per aggiungerlo al ponte. Toccate un listello sul ponte per toglierlo.</p>
+
+  <div class="actions">
+    <button class="btn primary" id="go">Fai passare l'esploratore</button>
+    <button class="btn" id="clear">Svuota il ponte</button>
+    <button class="btn" id="next" hidden>Livello successivo →</button>
+  </div>
+
+  <div class="feedback" id="feedback" hidden aria-live="assertive"></div>
+
+  <details class="teacher">
+    <summary>Note per il docente su questo livello</summary>
+    <dl>
+      <dt>Obiettivo</dt><dd id="nGoal"></dd>
+      <dt>Misconcezione</dt><dd id="nMis"></dd>
+      <dt>Prima di provare</dt><dd id="nPre"></dd>
+      <dt>Debriefing</dt><dd id="nQ"></dd>
+    </dl>
+  </details>
+</div>
+
+<script>
+/*LEVELS*/
+const LEVELS = [
+  { title:"Mezzi e quarti", target:[1,1], pieces:[[1,2,1],[1,4,4]],
+    goal:"Riconoscere che 2/4 e 1/2 occupano la stessa lunghezza (equivalenza).",
+    mis:"Pensare che frazioni con numeri diversi indichino quantità diverse.",
+    pre:"Chiedete: «Quanti listelli da 1/4 servono per fare la stessa strada di 1/2?» Fate votare prima di provare.",
+    q:"Perché <b>due quarti</b> sono lunghi quanto <b>un mezzo</b>? Esiste un altro modo per scrivere 1/2?" },
+  { title:"Terzi e sesti", target:[1,1], pieces:[[1,3,2],[1,6,4]],
+    goal:"Usare l'equivalenza 1/3 = 2/6 per completare l'unità.",
+    mis:"Confondere il denominatore con il numero di pezzi disponibili.",
+    pre:"«Con due terzi siamo arrivati a fine burrone? Quanto manca, in sesti?»",
+    q:"Quanti <b>sesti</b> ci sono in <b>un terzo</b>? E in un intero?" },
+  { title:"La trappola dei 2/5", target:[1,1], pieces:[[1,2,1],[1,3,1],[1,4,1],[1,6,1]], rule:{count:3},
+    goal:"Sommare frazioni con denominatori diversi passando dalla lunghezza, non dalla regola.",
+    mis:"1/2 + 1/3 = 2/5 (si sommano numeratori e denominatori).",
+    pre:"Prima di toccare: «Quanto fa 1/2 + 1/3?» Scrivete alla lavagna le risposte della classe, anche quelle sbagliate.",
+    q:"Mettete 1/2 e 1/3 sul ponte: è più o meno di 2/5? Allora <b>1/2 + 1/3</b> quanto fa davvero?" },
+  { title:"Più lungo di uno", target:[3,2], pieces:[[3,4,1],[1,2,2],[1,4,2],[1,3,1]],
+    goal:"Lavorare con una frazione maggiore dell'unità (frazione impropria).",
+    mis:"Credere che una frazione sia sempre minore di 1.",
+    pre:"«Il burrone misura 3/2: è più o meno di 1? Dove finisce l'intero?» Attivate il righello se serve.",
+    q:"3/2 è <b>più grande</b> di 1? Come lo scrivereste come numero misto?" },
+  { title:"Chi è più lungo?", target:[1,1], pieces:[[1,4,2],[1,8,4],[1,6,1]],
+    goal:"Confrontare frazioni unitarie: più grande il denominatore, più piccolo il pezzo.",
+    mis:"«1/8 è più grande di 1/6 perché 8 è più grande di 6».",
+    pre:"«Chi è più lungo, 1/6 o 1/8?» Fate scegliere alla classe, poi confrontate i listelli in basso.",
+    q:"Perché il listello da <b>1/8</b> è più corto di quello da <b>1/6</b>, anche se 8 è più grande di 6?" },
+  { title:"Strade diverse", target:[5,6], pieces:[[1,2,1],[1,3,2],[1,4,1],[1,12,2]],
+    goal:"Scoprire che la stessa frazione si ottiene con somme diverse.",
+    mis:"Pensare che esista una sola risposta giusta.",
+    pre:"Dopo il primo successo, chiedete un secondo ponte diverso: quante soluzioni trova la classe?",
+    q:"Avete trovato più ponti da <b>5/6</b>? Scrivete le somme: cosa hanno in comune?" },
+  { title:"Burrone in decimali", target:[5,4], label:"1,25", pieces:[[1,2,2],[1,4,2],[3,4,1],[1,8,2]],
+    goal:"Collegare un numero decimale alla frazione corrispondente (1,25 = 5/4).",
+    mis:"Considerare frazioni e decimali come due mondi separati.",
+    pre:"«1,25 è più o meno di 1? Quante volte ci sta 0,25 in un intero?»",
+    q:"Che frazione è <b>0,25</b>? Allora <b>1,25</b> come si scrive in quarti?" },
+  { title:"Decimi e quinti", target:[3,5], label:"0,6", pieces:[[1,2,1],[1,5,2],[1,10,3]],
+    goal:"Leggere 0,6 come 6/10 e come 3/5.",
+    mis:"Leggere 0,6 come «sei qualcosa» senza collegarlo a 6/10.",
+    pre:"«0,6 sono sei… cosa? Decimi? Centesimi?»",
+    q:"Perché <b>6/10</b> e <b>3/5</b> sono lo stesso punto sulla retta?" },
+  { title:"Il grande burrone", target:[2,1], pieces:[[5,4,1],[3,4,1],[2,3,2],[1,2,1],[1,3,1]],
+    goal:"Combinare frazioni improprie e proprie per arrivare a 2.",
+    mis:"Pensare che per fare 2 servano per forza pezzi «da intero».",
+    pre:"Sfida: «Si può fare con soli due listelli?»",
+    q:"Quali due listelli fanno <b>2</b>? Quanti quarti ci sono in 2?" },
+  { title:"La prova finale", target:[7,4], pieces:[[5,6,1],[2,3,1],[1,4,1],[1,3,2],[1,2,1],[1,12,1]],
+    goal:"Sommare frazioni con denominatori diversi (sesti, terzi, quarti, dodicesimi).",
+    mis:"Fermarsi al «a occhio» senza ricorrere al denominatore comune.",
+    pre:"Attivate il righello fine: «In che pezzetti è diviso ogni intero? Perché proprio dodicesimi?»",
+    q:"Perché il righello fine divide l'intero in <b>dodicesimi</b>? Riscrivete la vostra somma tutta in dodicesimi." },
+];
+/*END*/
+
+/* --- frazioni --- */
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const lcm=(a,b)=>a/gcd(a,b)*b;
+const norm=([n,d])=>{const g=gcd(n,d)||1;return [n/g,d/g]};
+const add=(a,b)=>norm([a[0]*b[1]+b[0]*a[1],a[1]*b[1]]);
+const sub=(a,b)=>norm([a[0]*b[1]-b[0]*a[1],a[1]*b[1]]);
+const cmp=(a,b)=>a[0]*b[1]-b[0]*a[1];
+const val=f=>f[0]/f[1];
+const frHTML=f=>f[1]===1?`<span>${f[0]}</span>`:`<span class="fr"><span>${f[0]}</span><span>${f[1]}</span></span>`;
+const frTxt=f=>f[1]===1?`${f[0]}`:`${f[0]}/${f[1]}`;
+const sumOf=arr=>arr.reduce((s,p)=>add(s,[p[0],p[1]]),[0,1]);
+
+/* soluzione minima (ricerca esaustiva, livelli piccoli) */
+function minPieces(lv){
+  const items=[];lv.pieces.forEach(([n,d,c])=>{for(let i=0;i<c;i++)items.push([n,d])});
+  let best=Infinity;
+  (function go(i,s,k){
+    const c=cmp(s,lv.target);
+    if(c===0){ if(!lv.rule||k===lv.rule.count) best=Math.min(best,k); return; }
+    if(c>0||i>=items.length||k>=best) return;
+    go(i+1,add(s,items[i]),k+1); go(i+1,s,k);
+  })(0,[0,1],0);
+  return best;
+}
+
+/* --- stato --- */
+const state={lvl:0,placed:[],attempts:0,busy:false,teams:false,turn:0,score:[0,0],grid:false,sum:false,solved:[]};
+const $=id=>document.getElementById(id);
+const U=320, X0=180, DECK=250, SVGNS="http://www.w3.org/2000/svg";
+const dColor=d=>`var(--d${[2,3,4,5,6,8,10,12].includes(d)?d:12})`;
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function lv(){return LEVELS[state.lvl]}
+
+/* --- interfaccia --- */
+function renderLevels(){
+  $("levels").innerHTML=LEVELS.map((l,i)=>`<button class="${i===state.lvl?'cur':''} ${state.solved.includes(i)?'done':''}" data-i="${i}" aria-label="Livello ${i+1}: ${l.title}">${i+1}</button>`).join("");
+}
+function renderBrief(){
+  const l=lv();
+  $("lvTitle").textContent=`${state.lvl+1}. ${l.title}`;
+  $("lvGoal").innerHTML=`Burrone: <b>${l.label?l.label:frHTML(l.target)}</b>`;
+  $("lvRule").textContent=l.rule?`Regola: usate esattamente ${l.rule.count} listelli`:"";
+  $("nGoal").textContent=l.goal; $("nMis").textContent=l.mis; $("nPre").textContent=l.pre; $("nQ").innerHTML=l.q;
+  $("teams").hidden=!state.teams;
+  $("s0").textContent=state.score[0]; $("s1").textContent=state.score[1];
+  $("team0").classList.toggle("turn",state.turn===0); $("team1").classList.toggle("turn",state.turn===1);
+}
+function remaining(n,d){
+  const tot=lv().pieces.find(p=>p[0]===n&&p[1]===d)[2];
+  return tot-state.placed.filter(p=>p[0]===n&&p[1]===d).length;
+}
+function renderPalette(){
+  const scale=0.62;
+  $("palette").innerHTML=lv().pieces.map(([n,d])=>{
+    const r=remaining(n,d);
+    const w=Math.max(64,n/d*U*scale);
+    return `<button class="piece" style="width:${w}px;background-color:${dColor(d)}" data-n="${n}" data-d="${d}" ${r<=0||state.busy?'disabled':''} aria-label="Listello ${frTxt([n,d])}, ne restano ${r}">${frHTML([n,d])}<span class="n">×${r}</span></button>`;
+  }).join("");
+}
+function renderSum(){
+  const s=sumOf(state.placed);
+  $("sumbox").hidden=!state.sum;
+  $("sumbox").innerHTML=`Ponte: ${frHTML(s)} su ${frHTML(lv().target)}`;
+}
+
+/* --- scena --- */
+function el(tag,attrs,parent){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e}
+function renderScene(){
+  const svg=$("scene"); svg.innerHTML="";
+  const l=lv(), T=val(l.target), X1=X0+T*U;
+  const defs=el("defs",{},svg);
+  const g=el("linearGradient",{id:"sky",x1:0,y1:0,x2:0,y2:1},defs);
+  el("stop",{offset:"0","stop-color":"var(--sky)"},g); el("stop",{offset:"1","stop-color":"var(--sky2)"},g);
+  const hatch=el("pattern",{id:"hatch",width:10,height:10,patternUnits:"userSpaceOnUse",patternTransform:"rotate(45)"},defs);
+  el("rect",{width:10,height:10,fill:"var(--bad)"},hatch); el("rect",{width:4,height:10,fill:"rgba(255,255,255,.45)"},hatch);
+  el("rect",{x:0,y:0,width:1000,height:400,fill:"url(#sky)"},svg);
+  // fiume in fondo
+  el("rect",{x:X0,y:370,width:X1-X0,height:30,fill:"var(--river)"},svg);
+  // scogliere
+  const cliff=(x,w,left)=>{
+    const p=left?`M0,${DECK} L${x},${DECK} L${x-14},${DECK+60} L${x+6},${DECK+120} L${x-20},400 L0,400 Z`
+                :`M${x},${DECK} L1000,${DECK} L1000,400 L${x+20},400 L${x-6},${DECK+120} L${x+14},${DECK+60} Z`;
+    el("path",{d:p,fill:"var(--rock)",stroke:"var(--rock-dark)","stroke-width":3},svg);
+  };
+  cliff(X0,0,true); cliff(X1,0,false);
+  // staffe di aggancio
+  [X0,X1].forEach(x=>el("rect",{x:x-5,y:DECK-4,width:10,height:34,rx:2,fill:"var(--ink)",opacity:.75},svg));
+  // ingombro del burrone (sagoma tratteggiata)
+  el("rect",{x:X0,y:DECK,width:X1-X0,height:26,fill:"none",stroke:"var(--ink)","stroke-dasharray":"6 6","stroke-width":2,opacity:.45},svg);
+  // righello
+  const rg=el("g",{"font-family":"Atkinson Hyperlegible, Verdana, sans-serif","font-size":20,fill:"var(--ink)"},svg);
+  const y0=DECK+44;
+  el("line",{x1:X0,y1:y0,x2:X1,y2:y0,stroke:"var(--ink)","stroke-width":2},rg);
+  if(state.grid){
+    let L=l.target[1]; l.pieces.forEach(p=>L=lcm(L,p[1]));
+    for(let i=0;i<=Math.round(T*L);i++){const x=X0+i/L*U; el("line",{x1:x,y1:y0-6,x2:x,y2:y0+6,stroke:"var(--ink)","stroke-width":1.2,opacity:.7},rg)}
+    const t=el("text",{x:X0,y:y0+64,"font-size":17,fill:"var(--muted)"},rg); t.textContent=`righello diviso in ${L} parti per intero`;
+  }
+  for(let k=0;k<=Math.floor(T+1e-9);k++){const x=X0+k*U; el("line",{x1:x,y1:y0-12,x2:x,y2:y0+12,stroke:"var(--ink)","stroke-width":3},rg); const t=el("text",{x:x,y:y0+36,"text-anchor":"middle","font-weight":700},rg); t.textContent=k;}
+  if(Math.abs(T-Math.round(T))>1e-9){
+    el("line",{x1:X1,y1:y0-12,x2:X1,y2:y0+12,stroke:"var(--accent)","stroke-width":3},rg);
+    const t=el("text",{x:X1,y:y0+36,"text-anchor":"middle","font-weight":700,fill:"var(--accent)"},rg); t.textContent=l.label||frTxt(l.target);
+  }
+  // listelli posati
+  let s=0;
+  state.placed.forEach((p,i)=>{
+    const x=X0+s*U, w=p[0]/p[1]*U;
+    const gp=el("g",{class:"placed","data-i":i,style:"cursor:pointer"},svg);
+    el("rect",{x:x+1,y:DECK,width:w-2,height:26,rx:3,fill:dColor(p[1]),stroke:"rgba(0,0,0,.35)","stroke-width":2},gp);
+    if(x+w>X1+0.5){ const ox=Math.max(x,X1); el("rect",{x:ox,y:DECK,width:x+w-ox,height:26,fill:"url(#hatch)",opacity:.9},gp); }
+    if(w>=38){const t=el("text",{x:x+w/2,y:DECK+19,"text-anchor":"middle","font-size":17,"font-weight":700,fill:"#fff","font-family":"Atkinson Hyperlegible, Verdana, sans-serif"},gp); t.textContent=frTxt(p);}
+    s+=val(p);
+  });
+  // esploratore
+  const hero=el("g",{id:"hero",transform:`translate(110,${DECK})`},svg);
+  el("ellipse",{cx:0,cy:0,rx:16,ry:4,fill:"rgba(0,0,0,.2)"},hero);
+  el("rect",{x:-9,y:-26,width:7,height:24,rx:3,fill:"var(--ink)",class:"legL"},hero);
+  el("rect",{x:2,y:-26,width:7,height:24,rx:3,fill:"var(--ink)",class:"legR"},hero);
+  el("rect",{x:-14,y:-62,width:28,height:40,rx:8,fill:"var(--accent)"},hero);
+  el("rect",{x:-22,y:-58,width:10,height:26,rx:4,fill:"var(--d2)"},hero);
+  el("circle",{cx:0,cy:-76,r:14,fill:"#f1c9a0",stroke:"var(--ink)","stroke-width":2},hero);
+  el("path",{d:"M-18,-80 Q0,-102 18,-80 Z",fill:"var(--d6)"},hero);
+  el("circle",{cx:5,cy:-77,r:2,fill:"var(--ink)"},hero);
+}
+
+function renderAll(){renderLevels();renderBrief();renderPalette();renderScene();renderSum();
+  $("go").disabled=state.busy||state.placed.length===0; $("clear").disabled=state.busy||state.placed.length===0;}
+
+/* --- azioni --- */
+$("palette").addEventListener("click",e=>{
+  const b=e.target.closest(".piece"); if(!b||b.disabled||state.busy) return;
+  state.placed.push([+b.dataset.n,+b.dataset.d]); hideFeedback(); renderAll();
+});
+$("scene").addEventListener("click",e=>{
+  const g=e.target.closest(".placed"); if(!g||state.busy) return;
+  state.placed.splice(+g.dataset.i,1); hideFeedback(); renderAll();
+});
+$("clear").onclick=()=>{state.placed=[];hideFeedback();renderAll()};
+$("levels").addEventListener("click",e=>{const b=e.target.closest("button");if(b)goLevel(+b.dataset.i)});
+$("next").onclick=()=>goLevel(Math.min(state.lvl+1,LEVELS.length-1));
+function toggle(id,key){$(id).onclick=()=>{state[key]=!state[key];$(id).setAttribute("aria-pressed",state[key]);renderAll()}}
+toggle("tGrid","grid"); toggle("tSum","sum"); toggle("tTeams","teams");
+
+function goLevel(i){state.lvl=i;state.placed=[];state.attempts=0;state.busy=false;hideFeedback();$("next").hidden=true;renderAll()}
+function hideFeedback(){$("feedback").hidden=true}
+function showFeedback(ok,html){const f=$("feedback");f.className="feedback "+(ok?"ok":"bad");f.innerHTML=html;f.hidden=false}
+
+function animate(dur,step){return new Promise(res=>{
+  if(reduce){step(1);return res()}
+  const t0=performance.now();
+  (function f(t){const k=Math.min(1,(t-t0)/dur);step(k);k<1?requestAnimationFrame(f):res()})(t0);
+})}
+function walk(hero,x0,x1){
+  const L=hero.querySelector(".legL"),R=hero.querySelector(".legR");
+  return animate(Math.max(400,Math.abs(x1-x0)*4),k=>{
+    const x=x0+(x1-x0)*k, sw=Math.sin(k*Math.abs(x1-x0)/9)*4;
+    hero.setAttribute("transform",`translate(${x},${DECK})`);
+    L.setAttribute("x",-9+sw); R.setAttribute("x",2-sw);
+  });
+}
+
+$("go").onclick=async()=>{
+  if(state.busy||!state.placed.length) return;
+  const l=lv(), s=sumOf(state.placed), c=cmp(s,l.target), T=val(l.target);
+  const sumStr=state.placed.map(p=>frHTML(p)).join(" + ");
+  state.attempts++; state.busy=true; renderAll();
+  const hero=$("hero");
+  if(c>0){
+    $("scene").classList.add("shake"); setTimeout(()=>$("scene").classList.remove("shake"),520);
+    finishFail(`Troppo lungo: il ponte non si incastra. Avete costruito ${frHTML(s)} invece di ${targetHTML()}. Avanza ${frHTML(sub(s,l.target))}.`);
+    return;
+  }
+  if(c<0){
+    const end=X0+val(s)*U;
+    await walk(hero,110,end-4);
+    await animate(700,k=>hero.setAttribute("transform",`translate(${end-4+k*20},${DECK+k*k*170}) rotate(${k*70})`));
+    finishFail(`Troppo corto: l'esploratore è caduto! Avete coperto ${frHTML(s)} su ${targetHTML()}. Mancava ${frHTML(sub(l.target,s))}.`);
+    return;
+  }
+  if(l.rule&&state.placed.length!==l.rule.count){
+    finishFail(`Lunghezza giusta (${sumStr} = ${targetHTML()}), ma la regola chiedeva esattamente ${l.rule.count} listelli. Ne avete usati ${state.placed.length}.`);
+    return;
+  }
+  await walk(hero,110,X0+T*U+70);
+  await animate(500,k=>hero.setAttribute("transform",`translate(${X0+T*U+70},${DECK-Math.sin(k*Math.PI)*40})`));
+  const min=minPieces(l), n=state.placed.length;
+  let extra = n<=min ? "Con il minimo di listelli possibile!" : `Sfida: si può fare con ${min} listelli. Ci provate?`;
+  if(state.teams){
+    const pts = (state.attempts===1?2:1) + (n<=min?1:0);
+    state.score[state.turn]+=pts;
+    extra+=` <span>+${pts} punti ai ${state.turn?"Blu":"Rossi"}.</span>`;
+    state.turn=1-state.turn;
+  }
+  if(!state.solved.includes(state.lvl)) state.solved.push(state.lvl);
+  state.busy=false;
+  showFeedback(true,`<span>Ponte perfetto! ${sumStr} = ${targetHTML()}</span><span>${extra}</span><span class="q"><b>Domanda per la classe:</b> ${l.q}</span>`);
+  $("next").hidden=state.lvl>=LEVELS.length-1;
+  renderAll();
+};
+function targetHTML(){const l=lv();return l.label?`${l.label} (${frHTML(l.target)})`:frHTML(l.target)}
+function finishFail(msg){
+  let extra="";
+  if(state.teams){state.turn=1-state.turn;extra=` <span>Tocca ai ${state.turn?"Blu":"Rossi"}.</span>`}
+  showFeedback(false,`<span>${msg}</span>${extra}`);
+  setTimeout(()=>{state.busy=false;renderAll()},reduce?0:900);
+}
+
+/* aggiornamenti dal visualizzatore: conserva la partita */
+window.claude?.hot?.snapshot?.(()=>({lvl:state.lvl,score:state.score,solved:state.solved,teams:state.teams,turn:state.turn}));
+function start(d){Object.assign(state,{lvl:d.lvl??0,score:d.score??[0,0],solved:d.solved??[],teams:!!d.teams,turn:d.turn??0});
+  $("tTeams").setAttribute("aria-pressed",state.teams);renderAll()}
+window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+</script>
+
+</body></html>

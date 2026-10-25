@@ -252,10 +252,14 @@
         var tipo = griglia.getAttribute("data-catalogo");
         var limite = Number(griglia.getAttribute("data-limite")) || Infinity;
         var segnaposto = Number(griglia.getAttribute("data-segnaposto")) || 0;
+        // Dal più recente; a parità di data, prima l'ultimo aggiunto al catalogo
         var voci = catalogo.filter(function (v) { return valida(v, tipo); })
+          .map(function (v, i) { return { voce: v, ordine: i }; })
           .sort(function (a, b) {
-            return (b.dataPubblicazione || "").localeCompare(a.dataPubblicazione || "");
-          });
+            return (b.voce.dataPubblicazione || "").localeCompare(a.voce.dataPubblicazione || "") ||
+              b.ordine - a.ordine;
+          })
+          .map(function (x) { return x.voce; });
         var filtri = document.querySelector("[data-filtri]");
 
         if (filtri && limite === Infinity) {

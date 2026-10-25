@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Missione frazioni: sfida alla LIM</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172554;
+      --muted: #475569;
+      --blue: #1d4ed8;
+      --purple: #6d28d9;
+      --green: #047857;
+      --orange: #c2410c;
+      --surface: #ffffff;
+      --line: #cbd5e1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #dbeafe, #ede9fe 55%, #dcfce7);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 20px;
+    }
+
+    button, select {
+      font: inherit;
+    }
+
+    button:focus-visible, select:focus-visible {
+      outline: 4px solid #f59e0b;
+      outline-offset: 3px;
+    }
+
+    .app {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .timer-card, .panel, .question-card {
+      border: 2px solid var(--line);
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: 0 8px 22px #17255416;
+    }
+
+    .timer-card {
+      min-width: 190px;
+      padding: 12px 20px;
+      text-align: center;
+    }
+
+    .timer-label {
+      display: block;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    #timer {
+      display: block;
+      font-variant-numeric: tabular-nums;
+      font-size: 3rem;
+      font-weight: 900;
+    }
+
+    .timer-controls, .toolbar, .nav, .score-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .timer-controls { justify-content: center; }
+
+    button, select {
+      min-height: 50px;
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 16px;
+    }
+
+    button {
+      color: white;
+      background: var(--blue);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover { filter: brightness(1.08); }
+    button:disabled { cursor: not-allowed; opacity: .55; }
+
+    button.secondary { background: #475569; }
+    button.purple { background: var(--purple); }
+    button.green { background: var(--green); }
+    button.orange { background: var(--orange); }
+    button.light {
+      color: var(--ink);
+      background: #e2e8f0;
+    }
+
+    select {
+      border: 2px solid var(--line);
+      background: white;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .toolbar {
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+
+    .toolbar label {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+    }
+
+    .game-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(300px, .9fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .question-card {
+      min-height: 440px;
+      padding: clamp(22px, 4vw, 48px);
+      border-top: 12px solid var(--purple);
+    }
+
+    .round-label {
+      color: var(--purple);
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    #questionTitle {
+      margin: 12px 0;
+      font-size: clamp(1.7rem, 3vw, 2.5rem);
+    }
+
+    #questionText {
+      min-height: 115px;
+      margin: 22px 0;
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .prompt-note {
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    #answerBox {
+      display: none;
+      margin-top: 20px;
+      padding: 18px 20px;
+      border: 3px solid #86efac;
+      border-radius: 16px;
+      background: #f0fdf4;
+      font-size: 1.35rem;
+      line-height: 1.5;
+    }
+
+    #answerBox.visible { display: block; }
+
+    .nav {
+      justify-content: space-between;
+      margin-top: 22px;
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 1.55rem;
+    }
+
+    .team {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+      padding: 12px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+    }
+
+    .team-name {
+      font-size: 1.2rem;
+      font-weight: 900;
+    }
+
+    .team-score {
+      min-width: 48px;
+      text-align: center;
+      font-size: 1.7rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .team-actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 8px;
+    }
+
+    .team-actions button {
+      flex: 1;
+      min-height: 44px;
+      padding: 8px;
+    }
+
+    .score-controls { margin-top: 14px; }
+    .score-controls button { flex: 1; }
+
+    .status {
+      min-height: 1.5em;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .footer-note {
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: .95rem;
+    }
+
+    @media (max-width: 900px) {
+      .game-layout { grid-template-columns: 1fr; }
+      .question-card { min-height: 0; }
+    }
+
+    @media (max-width: 520px) {
+      .app { padding: 12px; }
+      .timer-card { width: 100%; }
+      .toolbar { align-items: stretch; }
+      .toolbar label, .toolbar select { width: 100%; }
+      .nav button { flex: 1; }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      button { transition: filter .15s ease, transform .15s ease; }
+      button:hover { transform: translateY(-1px); }
+    }
+    .home-link{display:inline-block;align-self:flex-start;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:white;color:var(--ink);font-weight:700;font-size:15px;text-decoration:none}
+    .home-link:focus-visible{outline:4px solid #f59e0b;outline-offset:3px}
+    .home-link { margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <a class="home-link" href="../../">← Officina Didattica</a>
+    <header>
+      <div>
+        <h1>Missione frazioni</h1>
+        <p class="subtitle">Sfida alla LIM · Seconda media · Quattro squadre</p>
+      </div>
+      <section class="timer-card" aria-label="Timer della squadra">
+        <span class="timer-label">TEMPO</span>
+        <span id="timer" aria-live="polite">00:30</span>
+        <div class="timer-controls">
+          <button class="green" id="startTimer" type="button">Avvia</button>
+          <button class="secondary" id="resetTimer" type="button">Azzera</button>
+        </div>
+      </section>
+    </header>
+
+    <section class="toolbar panel" aria-label="Navigazione del gioco">
+      <label for="roundSelect">Round
+        <select id="roundSelect"></select>
+      </label>
+      <label for="questionSelect">Domanda
+        <select id="questionSelect"></select>
+      </label>
+      <button class="purple" id="showAnswer" type="button">Mostra soluzione</button>
+      <button class="orange" id="hideAnswer" type="button">Nascondi soluzione</button>
+      <button class="light" id="restartGame" type="button">Ricominciamo</button>
+    </section>
+
+    <div class="game-layout">
+      <section class="question-card" aria-live="polite">
+        <div class="round-label" id="roundLabel"></div>
+        <h2 id="questionTitle"></h2>
+        <div id="questionText"></div>
+        <p class="prompt-note">Discutete in squadra, poi scegliete chi spiega la strategia.</p>
+        <div id="answerBox" role="status"></div>
+        <nav class="nav" aria-label="Navigazione domande">
+          <button class="secondary" id="previousQuestion" type="button">← Domanda precedente</button>
+          <button id="nextQuestion" type="button">Domanda successiva →</button>
+        </nav>
+      </section>
+
+      <aside class="panel" aria-label="Tabella segnapunti">
+        <h2>Segnapunti</h2>
+        <div id="scoreboard"></div>
+        <div class="score-controls">
+          <button class="light" id="clearScores" type="button">Azzera punteggi</button>
+        </div>
+        <p class="status" id="status" aria-live="polite"></p>
+        <p class="footer-note">Punto per la risposta corretta; punto bonus per una spiegazione chiara.</p>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    const rounds = [
+      {
+        name: "Round 1 — Semplificazione",
+        questions: [
+          {
+            prompt: "Riduci ai minimi termini: 24/36",
+            answer: "24/36 = 2/3. Dividiamo numeratore e denominatore per 12."
+          },
+          {
+            prompt: "Riduci ai minimi termini: 27/45",
+            answer: "27/45 = 3/5. Dividiamo numeratore e denominatore per 9."
+          },
+          {
+            prompt: "Riduci ai minimi termini: 42/56",
+            answer: "42/56 = 3/4. Dividiamo numeratore e denominatore per 14."
+          },
+          {
+            prompt: "Bonus: scrivi una frazione equivalente a 4/7 con denominatore 35.",
+            answer: "4/7 = 20/35: moltiplichiamo numeratore e denominatore per 5."
+          }
+        ]
+      },
+      {
+        name: "Round 2 — Confronto",
+        questions: [
+          {
+            prompt: "Inserisci <, > oppure =: 5/6 □ 7/9",
+            answer: "5/6 > 7/9, perché 5/6 = 15/18 e 7/9 = 14/18."
+          },
+          {
+            prompt: "Inserisci <, > oppure =: 4/10 □ 2/5",
+            answer: "4/10 = 2/5, perché sono frazioni equivalenti."
+          },
+          {
+            prompt: "Inserisci <, > oppure =: 3/8 □ 5/12",
+            answer: "3/8 < 5/12, perché 3/8 = 9/24 e 5/12 = 10/24."
+          },
+          {
+            prompt: "Bonus: ordina in senso crescente 3/5, 1/2, 7/10.",
+            answer: "1/2 < 3/5 < 7/10, perché in decimi sono 5/10, 6/10 e 7/10."
+          }
+        ]
+      },
+      {
+        name: "Round 3 — Operazioni",
+        questions: [
+          {
+            prompt: "Calcola e semplifica: 3/8 + 1/8",
+            answer: "3/8 + 1/8 = 4/8 = 1/2."
+          },
+          {
+            prompt: "Calcola e semplifica: 5/6 − 1/4",
+            answer: "5/6 − 1/4 = 10/12 − 3/12 = 7/12."
+          },
+          {
+            prompt: "Calcola e semplifica: 4/9 × 3/8",
+            answer: "4/9 × 3/8 = 12/72 = 1/6."
+          },
+          {
+            prompt: "Calcola e semplifica: 3/4 ÷ 9/10",
+            answer: "3/4 × 10/9 = 30/36 = 5/6."
+          }
+        ]
+      },
+      {
+        name: "Round 4 — Problemi",
+        questions: [
+          {
+            prompt: "Una bottiglia contiene 3/4 di litro d'acqua. Ne bevi 1/3 di litro. Quanta acqua resta?",
+            answer: "3/4 − 1/3 = 9/12 − 4/12 = 5/12 di litro."
+          },
+          {
+            prompt: "Un sentiero è lungo 9/10 di chilometro. Marco ne ha percorso 2/3. Quanti chilometri ha percorso?",
+            answer: "9/10 × 2/3 = 18/30 = 3/5 di chilometro."
+          },
+          {
+            prompt: "Una pizza è divisa in 8 fette uguali. Anna ne mangia 1/4 e Paolo 3/8. Quale frazione della pizza è stata mangiata in tutto?",
+            answer: "1/4 + 3/8 = 2/8 + 3/8 = 5/8 della pizza."
+          },
+          {
+            prompt: "In una classe di 24 alunni, i 3/8 vanno a scuola in autobus. Quanti alunni vanno in autobus?",
+            answer: "24 : 8 = 3, poi 3 × 3 = 9 alunni."
+          }
+        ]
+      }
+    ];
+
+    const teamNames = ["Squadra 1", "Squadra 2", "Squadra 3", "Squadra 4"];
+    const scores = [0, 0, 0, 0];
+    let roundIndex = 0;
+    let questionIndex = 0;
+    let seconds = 30;
+    let timerInterval = null;
+
+    const roundSelect = document.getElementById("roundSelect");
+    const questionSelect = document.getElementById("questionSelect");
+    const timerDisplay = document.getElementById("timer");
+    const answerBox = document.getElementById("answerBox");
+
+    function buildRoundOptions() {
+      roundSelect.innerHTML = "";
+      rounds.forEach((round, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = round.name;
+        roundSelect.appendChild(option);
+      });
+    }
+
+    function buildQuestionOptions() {
+      questionSelect.innerHTML = "";
+      rounds[roundIndex].questions.forEach((_, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = "Domanda " + (index + 1) + " / " + rounds[roundIndex].questions.length;
+        questionSelect.appendChild(option);
+      });
+    }
+
+    function renderScoreboard() {
+      const scoreboard = document.getElementById("scoreboard");
+      scoreboard.innerHTML = "";
+
+      teamNames.forEach((name, index) => {
+        const row = document.createElement("div");
+        row.className = "team";
+
+        const title = document.createElement("div");
+        title.className = "team-name";
+        title.textContent = name;
+
+        const score = document.createElement("div");
+        score.className = "team-score";
+        score.setAttribute("aria-label", scores[index] + " punti");
+        score.textContent = scores[index];
+
+        const actions = document.createElement("div");
+        actions.className = "team-actions";
+
+        const addPoint = document.createElement("button");
+        addPoint.type = "button";
+        addPoint.className = "green";
+        addPoint.textContent = "+1 punto";
+        addPoint.setAttribute("aria-label", "Aggiungi un punto a " + name);
+        addPoint.addEventListener("click", () => changeScore(index, 1));
+
+        const bonusPoint = document.createElement("button");
+        bonusPoint.type = "button";
+        bonusPoint.className = "purple";
+        bonusPoint.textContent = "+1 bonus";
+        bonusPoint.setAttribute("aria-label", "Aggiungi un punto bonus a " + name);
+        bonusPoint.addEventListener("click", () => changeScore(index, 1));
+
+        const removePoint = document.createElement("button");
+        removePoint.type = "button";
+        removePoint.className = "light";
+        removePoint.textContent = "−1";
+        removePoint.setAttribute("aria-label", "Togli un punto a " + name);
+        removePoint.addEventListener("click", () => changeScore(index, -1));
+
+        actions.append(addPoint, bonusPoint, removePoint);
+        row.append(title, score, actions);
+        scoreboard.appendChild(row);
+      });
+    }
+
+    function changeScore(teamIndex, amount) {
+      scores[teamIndex] = Math.max(0, scores[teamIndex] + amount);
+      renderScoreboard();
+      const verb = amount > 0 ? "aggiunto" : "tolto";
+      document.getElementById("status").textContent =
+        "Punto " + verb + " a " + teamNames[teamIndex] + ".";
+    }
+
+    function renderQuestion() {
+      const round = rounds[roundIndex];
+      const question = round.questions[questionIndex];
+
+      document.getElementById("roundLabel").textContent = round.name;
+      document.getElementById("questionTitle").textContent =
+        "Domanda " + (questionIndex + 1) + " di " + round.questions.length;
+      document.getElementById("questionText").textContent = question.prompt;
+      answerBox.textContent = question.answer;
+      answerBox.classList.remove("visible");
+
+      roundSelect.value = String(roundIndex);
+      buildQuestionOptions();
+      questionSelect.value = String(questionIndex);
+
+      document.getElementById("previousQuestion").disabled =
+        roundIndex === 0 && questionIndex === 0;
+      document.getElementById("nextQuestion").disabled =
+        roundIndex === rounds.length - 1 &&
+        questionIndex === rounds[roundIndex].questions.length - 1;
+      document.getElementById("status").textContent = "";
+    }
+
+    function moveQuestion(direction) {
+      let newRound = roundIndex;
+      let newQuestion = questionIndex + direction;
+
+      if (newQuestion < 0) {
+        if (roundIndex === 0) return;
+        newRound = roundIndex - 1;
+        newQuestion = rounds[newRound].questions.length - 1;
+      } else if (newQuestion >= rounds[roundIndex].questions.length) {
+        if (roundIndex === rounds.length - 1) return;
+        newRound = roundIndex + 1;
+        newQuestion = 0;
+      }
+
+      roundIndex = newRound;
+      questionIndex = newQuestion;
+      renderQuestion();
+    }
+
+    function stopTimer() {
+      if (timerInterval !== null) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    function updateTimer() {
+      const minutes = Math.floor(seconds / 60);
+      const remainingSeconds = seconds % 60;
+      timerDisplay.textContent =
+        String(minutes).padStart(2, "0") + ":" +
+        String(remainingSeconds).padStart(2, "0");
+    }
+
+    document.getElementById("startTimer").addEventListener("click", () => {
+      if (timerInterval !== null) return;
+      if (seconds <= 0) seconds = 30;
+      updateTimer();
+      timerInterval = setInterval(() => {
+        seconds -= 1;
+        updateTimer();
+        if (seconds <= 0) {
+          stopTimer();
+          document.getElementById("status").textContent = "Tempo scaduto! È il momento di rispondere.";
+        }
+      }, 1000);
+    });
+
+    document.getElementById("resetTimer").addEventListener("click", () => {
+      stopTimer();
+      seconds = 30;
+      updateTimer();
+    });
+
+    document.getElementById("showAnswer").addEventListener("click", () => {
+      answerBox.classList.add("visible");
+    });
+
+    document.getElementById("hideAnswer").addEventListener("click", () => {
+      answerBox.classList.remove("visible");
+    });
+
+    document.getElementById("previousQuestion").addEventListener("click", () => moveQuestion(-1));
+    document.getElementById("nextQuestion").addEventListener("click", () => moveQuestion(1));
+
+    roundSelect.addEventListener("change", () => {
+      roundIndex = Number(roundSelect.value);
+      questionIndex = 0;
+      renderQuestion();
+    });
+
+    questionSelect.addEventListener("change", () => {
+      questionIndex = Number(questionSelect.value);
+      renderQuestion();
+    });
+
+    document.getElementById("clearScores").addEventListener("click", () => {
+      scores.fill(0);
+      renderScoreboard();
+      document.getElementById("status").textContent = "Punteggi azzerati.";
+    });
+
+    document.getElementById("restartGame").addEventListener("click", () => {
+      stopTimer();
+      seconds = 30;
+      roundIndex = 0;
+      questionIndex = 0;
+      scores.fill(0);
+      updateTimer();
+      renderScoreboard();
+      renderQuestion();
+    });
+
+    buildRoundOptions();
+    renderScoreboard();
+    renderQuestion();
+    updateTimer();
+  </script>
+</body>
+</html>

@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sfida Frazioni — Gioco Interattivo</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #0f172a;
+    --muted: #475569;
+    --blue: #1d4ed8;
+    --red: #b91c1c;
+    --green: #047857;
+    --green-light: #d1fae5;
+    --red-light: #fee2e2;
+    --purple: #6d28d9;
+    --orange: #c2410c;
+    --surface: #ffffff;
+    --line: #cbd5e1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #dbeafe, #ede9fe 50%, #fee2e2);
+    color: var(--ink);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 20px;
+  }
+  button, select { font: inherit; }
+  button:focus-visible { outline: 4px solid #f59e0b; outline-offset: 3px; }
+  .app { width: min(1500px, 100%); margin: 0 auto; padding: 20px; }
+
+  header {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between; gap: 16px; margin-bottom: 16px;
+  }
+  h1 { margin: 0; font-size: clamp(1.8rem, 3.5vw, 3rem); }
+  .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 1.05rem; }
+
+  .card {
+    border: 2px solid var(--line);
+    border-radius: 22px;
+    background: var(--surface);
+    box-shadow: 0 8px 22px #0f172a16;
+  }
+
+  .timer-card { min-width: 220px; padding: 12px 20px; text-align: center; }
+  .timer-label { display: block; color: var(--muted); font-size: .95rem; font-weight: 700; }
+  #timer {
+    display: block; font-variant-numeric: tabular-nums;
+    font-size: 3rem; font-weight: 900; line-height: 1;
+  }
+  #timer.warn { color: var(--red); animation: pulse .6s infinite; }
+  @keyframes pulse { 50% { opacity: .45; } }
+  .timer-controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+
+  button {
+    min-height: 48px; border: 0; border-radius: 12px; padding: 10px 16px;
+    color: white; background: var(--blue);
+    font-weight: 800; cursor: pointer;
+    transition: filter .15s ease, transform .15s ease;
+  }
+  button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+  button:disabled { cursor: not-allowed; opacity: .5; transform: none; }
+  button.green  { background: var(--green); }
+  button.red    { background: var(--red); }
+  button.purple { background: var(--purple); }
+  button.orange { background: var(--orange); }
+  button.gray   { background: #475569; }
+  button.light  { color: var(--ink); background: #e2e8f0; }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 14px; margin-bottom: 16px;
+  }
+  .round-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .round-pills button {
+    background: #e2e8f0; color: var(--ink); font-weight: 800;
+    min-height: 42px; padding: 8px 14px;
+  }
+  .round-pills button.active { background: var(--purple); color: white; }
+
+  .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+    gap: 16px; align-items: start;
+  }
+
+  .question-card {
+    min-height: 460px;
+    padding: clamp(20px, 3.5vw, 40px);
+    border-top: 12px solid var(--purple);
+  }
+  .round-label {
+    color: var(--purple); font-size: 1rem; font-weight: 900;
+    letter-spacing: .06em; text-transform: uppercase;
+  }
+  #questionTitle { margin: 8px 0; font-size: clamp(1.3rem, 2.2vw, 1.9rem); color: var(--muted); }
+  #questionText {
+    min-height: 80px; margin: 14px 0 22px;
+    font-size: clamp(1.6rem, 3.2vw, 2.6rem);
+    font-weight: 800; line-height: 1.3;
+  }
+
+  /* --- RISPOSTE INTERATTIVE --- */
+  .answers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 10px 0 18px;
+  }
+  .answers button {
+    min-height: 90px;
+    font-size: clamp(1.3rem, 2.2vw, 1.9rem);
+    font-weight: 900;
+    background: white;
+    color: var(--ink);
+    border: 3px solid var(--line);
+    border-radius: 16px;
+    padding: 14px;
+  }
+  .answers button:hover:not(:disabled) {
+    border-color: var(--blue);
+    background: #eff6ff;
+    transform: translateY(-2px);
+  }
+  .answers button.correct {
+    background: var(--green-light) !important;
+    border-color: var(--green) !important;
+    color: var(--green) !important;
+    animation: pop .35s ease;
+  }
+  .answers button.wrong {
+    background: var(--red-light) !important;
+    border-color: var(--red) !important;
+    color: var(--red) !important;
+    animation: shake .35s ease;
+  }
+  @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  #feedback {
+    display: none;
+    margin: 6px 0 14px;
+    padding: 16px 20px;
+    border-radius: 14px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.4;
+  }
+  #feedback.visible { display: block; }
+  #feedback.ok  { background: var(--green-light); border: 3px solid var(--green); color: #065f46; }
+  #feedback.ko  { background: var(--red-light); border: 3px solid var(--red); color: #991b1b; }
+  #feedback strong { display:block; font-size: 1.35rem; margin-bottom: 6px; }
+
+  .nav {
+    display: flex; justify-content: space-between;
+    gap: 10px; margin-top: 18px;
+  }
+
+  /* --- SEGNAPUNTI --- */
+  .scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .team {
+    border: 3px solid var(--line);
+    border-radius: 18px;
+    padding: 14px;
+    text-align: center;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .team.blue { border-color: var(--blue); background: #eff6ff; }
+  .team.red  { border-color: var(--red);  background: #fef2f2; }
+  .team.active { transform: scale(1.04); box-shadow: 0 0 0 5px #f59e0b; }
+  .team-name {
+    font-size: 1.1rem; font-weight: 900;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  .team-score {
+    font-size: 3.4rem; font-weight: 900;
+    font-variant-numeric: tabular-nums; line-height: 1;
+    margin: 4px 0;
+    transition: transform .3s ease;
+  }
+  .team.blue .team-score { color: var(--blue); }
+  .team.red  .team-score { color: var(--red); }
+  .team-score.bump { animation: bump .5s ease; }
+  @keyframes bump {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+
+  .turn-banner {
+    margin-top: 14px; padding: 12px;
+    border-radius: 12px; text-align: center;
+    font-weight: 900; font-size: 1.1rem;
+    background: #f1f5f9;
+  }
+  .turn-banner.blue { background: #dbeafe; color: var(--blue); }
+  .turn-banner.red  { background: #fee2e2; color: var(--red);  }
+
+  .status {
+    min-height: 1.4em; margin: 12px 0 0;
+    color: var(--muted); font-weight: 700; font-size: .95rem;
+  }
+  .footer-note { margin: 12px 0 0; color: var(--muted); font-size: .88rem; }
+
+  /* --- SCHERMATA FINALE --- */
+  #winScreen {
+    position: fixed; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(15, 23, 42, .85);
+    z-index: 100;
+    padding: 20px;
+  }
+  #winScreen.visible { display: flex; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .win-box {
+    background: white;
+    border-radius: 24px;
+    padding: 40px;
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .win-box h2 { margin: 0 0 12px; font-size: 2.6rem; }
+  .win-box .trophy { font-size: 5rem; line-height: 1; margin-bottom: 10px; }
+  .win-box .final-scores {
+    display: flex; justify-content: center; gap: 30px;
+    margin: 24px 0;
+    font-size: 1.2rem; font-weight: 800;
+  }
+  .win-box .final-scores div span {
+    display: block; font-size: 2.5rem; margin-top: 6px;
+  }
+  .win-box button { margin-top: 10px; min-width: 200px; }
+
+  @media (max-width: 900px) {
+    .game-layout { grid-template-columns: 1fr; }
+    .question-card { min-height: 0; }
+  }
+  @media (max-width: 520px) {
+    .app { padding: 12px; }
+    .scoreboard { grid-template-columns: 1fr; }
+    .answers { grid-template-columns: 1fr; }
+    .game-layout { grid-template-columns: minmax(0, 1fr); }
+    .nav { flex-wrap: wrap; }
+    .nav button { flex: 1; }
+  }
+.home-link{display:inline-block;align-self:flex-start;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:white;color:var(--ink);font-weight:700;font-size:15px;text-decoration:none}
+.home-link:focus-visible{outline:4px solid #f59e0b;outline-offset:3px}
+  .home-link { margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<main class="app">
+  <a class="home-link" href="../../">← Officina Didattica</a>
+
+  <header>
+    <div>
+      <h1>⚔️ Sfida Frazioni</h1>
+      <p class="subtitle">Due squadre · Ripasso interattivo · Seconda media · LIM</p>
+    </div>
+    <section class="timer-card card" aria-label="Timer">
+      <span class="timer-label">TEMPO</span>
+      <span id="timer" aria-live="polite">00:45</span>
+      <div class="timer-controls">
+        <button class="green" id="startTimer" type="button">▶ Avvia</button>
+        <button class="gray"  id="pauseTimer" type="button">⏸</button>
+        <button class="orange" id="resetTimer" type="button">↺</button>
+      </div>
+    </section>
+  </header>
+
+  <section class="toolbar card" aria-label="Navigazione">
+    <div class="round-pills" id="roundPills"></div>
+    <button class="light" id="restartGame" type="button">🔄 Ricomincia</button>
+    <button class="purple" id="showWinner" type="button">🏆 Vincitrice</button>
+  </section>
+
+  <div class="game-layout">
+
+    <section class="question-card card" aria-live="polite">
+      <div class="round-label" id="roundLabel"></div>
+      <h2 id="questionTitle"></h2>
+      <div id="questionText"></div>
+
+      <div class="answers" id="answers"></div>
+      <div id="feedback" role="alert"></div>
+
+      <nav class="nav" aria-label="Navigazione domande">
+        <button class="gray" id="previousQuestion" type="button">← Precedente</button>
+        <button id="nextQuestion" type="button">Successiva →</button>
+      </nav>
+    </section>
+
+    <aside class="card" style="padding:16px;" aria-label="Segnapunti">
+      <h2 style="margin:0 0 12px; font-size:1.4rem;">🏆 Segnapunti</h2>
+      <div class="scoreboard" id="scoreboard"></div>
+
+      <div class="turn-banner" id="turnBanner"></div>
+      <div style="display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;">
+        <button class="purple" id="switchTurn" type="button" style="flex:1;">🔁 Cambia turno</button>
+        <button class="light"  id="clearScores" type="button" style="flex:1;">Azzera</button>
+      </div>
+
+      <p class="status" id="status" aria-live="polite"></p>
+      <p class="footer-note">Risposta corretta: +1 punto automatico · Bonus: +1 manuale dalla maestra.</p>
+    </aside>
+
+  </div>
+</main>
+
+<!-- SCHERMATA FINALE -->
+<div id="winScreen">
+  <div class="win-box">
+    <div class="trophy">🏆</div>
+    <h2 id="winTitle">Vince la Squadra Blu!</h2>
+    <div class="final-scores" id="finalScores"></div>
+    <button class="green" id="closeWin" type="button">Chiudi</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============ DATI (con opzioni di risposta) ============ */
+const rounds = [
+  {
+    name: "Round 1 — Semplificare",
+    questions: [
+      { prompt: "Riduci ai minimi termini: 18/24",
+        options: ["3/4", "6/8", "9/12", "2/3"],
+        correct: 0,
+        explain: "18/24 = <strong>3/4</strong> — divido numeratore e denominatore per 6 (MCD)." },
+      { prompt: "Riduci ai minimi termini: 21/35",
+        options: ["3/5", "7/5", "21/35", "2/3"],
+        correct: 0,
+        explain: "21/35 = <strong>3/5</strong> — divido per 7 (MCD)." },
+      { prompt: "Riduci ai minimi termini: 32/40",
+        options: ["4/5", "8/10", "16/20", "3/4"],
+        correct: 0,
+        explain: "32/40 = <strong>4/5</strong> — divido per 8 (MCD)." },
+      { prompt: "Quale frazione è equivalente a 3/5 con denominatore 40?",
+        options: ["24/40", "15/40", "12/40", "30/40"],
+        correct: 0,
+        explain: "3/5 = <strong>24/40</strong> — moltiplico numeratore e denominatore per 8." }
+    ]
+  },
+  {
+    name: "Round 2 — Confrontare",
+    questions: [
+      { prompt: "Qual è il segno giusto?  3/4  □  5/8",
+        options: [">", "<", "=", "Non si può"],
+        correct: 0,
+        explain: "3/4 = 6/8, quindi <strong>3/4 &gt; 5/8</strong>." },
+      { prompt: "Qual è il segno giusto?  2/3  □  6/9",
+        options: ["=", ">", "<", "Non si può"],
+        correct: 0,
+        explain: "<strong>2/3 = 6/9</strong> — sono equivalenti." },
+      { prompt: "Qual è il segno giusto?  7/10  □  3/5",
+        options: [">", "<", "=", "Non si può"],
+        correct: 0,
+        explain: "3/5 = 6/10, quindi <strong>7/10 &gt; 3/5</strong>." },
+      { prompt: "Ordina in senso crescente: 1/2, 3/4, 2/3. Qual è la sequenza giusta?",
+        options: ["1/2 < 2/3 < 3/4", "3/4 < 2/3 < 1/2", "2/3 < 1/2 < 3/4", "1/2 < 3/4 < 2/3"],
+        correct: 0,
+        explain: "Denominatore comune 12: 6/12 < 8/12 < 9/12 → <strong>1/2 &lt; 2/3 &lt; 3/4</strong>." }
+    ]
+  },
+  {
+    name: "Round 3 — Calcolare",
+    questions: [
+      { prompt: "Calcola e semplifica:  2/5 + 1/5",
+        options: ["3/5", "3/10", "2/10", "3/25"],
+        correct: 0,
+        explain: "Stesso denominatore: 2+1=3 → <strong>3/5</strong>." },
+      { prompt: "Calcola e semplifica:  7/8 − 1/4",
+        options: ["5/8", "6/8", "6/4", "7/32"],
+        correct: 0,
+        explain: "1/4 = 2/8, quindi 7/8 − 2/8 = <strong>5/8</strong>." },
+      { prompt: "Calcola e semplifica:  3/7 × 14/15",
+        options: ["2/5", "3/5", "42/105 non semplificabile", "1/5"],
+        correct: 0,
+        explain: "3/7 × 14/15 = 42/105 = <strong>2/5</strong>." },
+      { prompt: "Calcola e semplifica:  5/6 ÷ 10/9",
+        options: ["3/4", "4/3", "50/54", "2/3"],
+        correct: 0,
+        explain: "5/6 × 9/10 = 45/60 = <strong>3/4</strong>." }
+    ]
+  },
+  {
+    name: "Round 4 — Problemi",
+    questions: [
+      { prompt: "Una ricetta richiede 3/4 di litro di latte. Ne hai versato 1/2 litro. Quanto ne manca?",
+        options: ["1/4 di litro", "1/2 di litro", "2/4 di litro", "5/4 di litro"],
+        correct: 0,
+        explain: "3/4 − 2/4 = <strong>1/4 di litro</strong>." },
+      { prompt: "Una pista è lunga 5/6 di km. Sara ne percorre 2/5. Quanti km percorre?",
+        options: ["1/3 di km", "2/3 di km", "10/11 di km", "7/30 di km"],
+        correct: 0,
+        explain: "5/6 × 2/5 = 10/30 = <strong>1/3 di km</strong>." },
+      { prompt: "Una tavoletta ha 12 quadretti. Luca mangia 1/3 e sua sorella 1/4. Quale frazione è stata mangiata in tutto?",
+        options: ["7/12", "2/7", "5/12", "1/2"],
+        correct: 0,
+        explain: "1/3 + 1/4 = 4/12 + 3/12 = <strong>7/12</strong>." },
+      { prompt: "In classe 2/5 gioca a calcio e 1/3 a pallavolo. Quale frazione NON pratica né calcio né pallavolo?",
+        options: ["4/15", "11/15", "1/2", "3/8"],
+        correct: 0,
+        explain: "2/5 + 1/3 = 11/15. Non pratica nulla: 15/15 − 11/15 = <strong>4/15</strong>." }
+    ]
+  }
+];
+
+/* ============ STATO ============ */
+const teams = [
+  { name: "Squadra Blu",   score: 0, css: "blue" },
+  { name: "Squadra Rossa", score: 0, css: "red"  }
+];
+let roundIndex = 0;
+let questionIndex = 0;
+let seconds = 45;
+let timerInterval = null;
+let currentTurn = 0;
+let answered = false;   // blocca i click dopo la risposta
+let lastRoundResult = { correct: 0, wrong: 0 };
+
+/* ============ ELEMENTI ============ */
+const roundPills     = document.getElementById("roundPills");
+const answerBox      = document.getElementById("answers");
+const feedback       = document.getElementById("feedback");
+const scoreboard     = document.getElementById("scoreboard");
+const turnBanner     = document.getElementById("turnBanner");
+const timerDisplay   = document.getElementById("timer");
+const winScreen      = document.getElementById("winScreen");
+
+/* ============ SUONI (Web Audio, nessun file esterno) ============ */
+let audioCtx = null;
+function beep(freq, duration, type = "sine", volume = 0.15) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.value = volume;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) { /* ignora se browser blocca audio */ }
+}
+function soundCorrect() { beep(660, .12); setTimeout(() => beep(880, .18), 120); }
+function soundWrong()   { beep(220, .25, "sawtooth"); }
+function soundWin()     { [523,659,784,1047].forEach((f,i) => setTimeout(() => beep(f,.2), i*150)); }
+function soundTick()    { beep(1000, .06, "square", .08); }
+
+/* ============ PILLS ROUND ============ */
+function buildRoundPills() {
+  roundPills.innerHTML = "";
+  rounds.forEach((r, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "R" + (i + 1);
+    b.title = r.name;
+    if (i === roundIndex) b.classList.add("active");
+    b.addEventListener("click", () => {
+      roundIndex = i;
+      questionIndex = 0;
+      renderQuestion();
+    });
+    roundPills.appendChild(b);
+  });
+}
+
+/* ============ SEGNAPUNTI ============ */
+function renderScoreboard(bumpIndex = -1) {
+  scoreboard.innerHTML = "";
+  teams.forEach((team, i) => {
+    const div = document.createElement("div");
+    div.className = "team " + team.css + (i === currentTurn ? " active" : "");
+
+    const name = document.createElement("div");
+    name.className = "team-name";
+    name.textContent = team.name;
+
+    const score = document.createElement("div");
+    score.className = "team-score" + (i === bumpIndex ? " bump" : "");
+    score.textContent = team.score;
+    score.setAttribute("aria-label", team.score + " punti");
+
+    const actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.gap = "6px";
+    actions.style.justifyContent = "center";
+    actions.style.flexWrap = "wrap";
+
+    const bonus = document.createElement("button");
+    bonus.type = "button";
+    bonus.className = "purple";
+    bonus.textContent = "+1 bonus";
+    bonus.style.fontSize = ".9rem";
+    bonus.style.minHeight = "40px";
+    bonus.addEventListener("click", () => changeScore(i, 1, "bonus"));
+
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.className = "light";
+    minus.textContent = "−1";
+    minus.style.fontSize = ".9rem";
+    minus.style.minHeight = "40px";
+    minus.addEventListener("click", () => changeScore(i, -1, "punto"));
+
+    actions.append(bonus, minus);
+    div.append(name, score, actions);
+    scoreboard.appendChild(div);
+  });
+  updateTurnBanner();
+}
+
+function changeScore(teamIndex, amount, kind) {
+  teams[teamIndex].score = Math.max(0, teams[teamIndex].score + amount);
+  renderScoreboard(amount > 0 ? teamIndex : -1);
+  const verb = amount > 0 ? "aggiunto" : "tolto";
+  document.getElementById("status").textContent =
+    kind + " " + verb + " a " + teams[teamIndex].name + ".";
+}
+
+function updateTurnBanner() {
+  turnBanner.className = "turn-banner " + teams[currentTurn].css;
+  turnBanner.innerHTML = "Turno: <strong>" + teams[currentTurn].name + "</strong>";
+}
+
+function switchTurn() {
+  currentTurn = (currentTurn + 1) % teams.length;
+  renderScoreboard();
+  document.getElementById("status").textContent =
+    "Ora tocca a " + teams[currentTurn].name + ".";
+}
+
+/* ============ DOMANDA INTERATTIVA ============ */
+function renderQuestion() {
+  const round = rounds[roundIndex];
+  const q = round.questions[questionIndex];
+  answered = false;
+
+  document.getElementById("roundLabel").textContent = round.name;
+  document.getElementById("questionTitle").textContent =
+    "Domanda " + (questionIndex + 1) + " di " + round.questions.length;
+  document.getElementById("questionText").textContent = q.prompt;
+
+  // Feedback
+  feedback.className = "";
+  feedback.innerHTML = "";
+
+  // Risposte
+  answerBox.innerHTML = "";
+  // Opzioni in ordine casuale: la risposta giusta non è sempre nella stessa posizione
+  const order = q.options.map((_, i) => i);
+  for (let k = order.length - 1; k > 0; k--) {
+    const j = Math.floor(Math.random() * (k + 1));
+    [order[k], order[j]] = [order[j], order[k]];
+  }
+  order.forEach(i => {
+    const opt = q.options[i];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = opt;
+    b.dataset.index = i;
+    b.addEventListener("click", () => handleAnswer(i, b));
+    answerBox.appendChild(b);
+  });
+
+  // Navigazione
+  document.getElementById("previousQuestion").disabled =
+    roundIndex === 0 && questionIndex === 0;
+  document.getElementById("nextQuestion").disabled =
+    roundIndex === rounds.length - 1 &&
+    questionIndex === round.questions.length - 1;
+
+  document.getElementById("status").textContent = "";
+  buildRoundPills();
+  stopTimer();
+  seconds = 45;
+  updateTimer();
+}
+
+function handleAnswer(index, btn) {
+  if (answered) return;
+  answered = true;
+
+  const q = rounds[roundIndex].questions[questionIndex];
+  const buttons = answerBox.querySelectorAll("button");
+  buttons.forEach(b => b.disabled = true);
+
+  if (index === q.correct) {
+    btn.classList.add("correct");
+    soundCorrect();
+    // Assegna +1 punto automatico alla squadra di turno
+    teams[currentTurn].score += 1;
+    renderScoreboard(currentTurn);
+    feedback.className = "visible ok";
+    feedback.innerHTML = "<strong>✅ Risposta corretta!</strong>+1 punto alla " +
+      teams[currentTurn].name + ".<br>" + q.explain;
+    document.getElementById("status").textContent =
+      "Punto assegnato a " + teams[currentTurn].name + ".";
+    // Passa il turno automaticamente dopo 2 secondi
+    setTimeout(() => {
+      if (answered) switchTurn();
+    }, 2200);
+  } else {
+    btn.classList.add("wrong");
+    soundWrong();
+    // Evidenzia la corretta
+    answerBox.querySelector('[data-index="' + q.correct + '"]').classList.add("correct");
+    feedback.className = "visible ko";
+    feedback.innerHTML = "<strong>❌ Non è la risposta giusta.</strong>La soluzione è: " +
+      q.options[q.correct] + ".<br>" + q.explain;
+    document.getElementById("status").textContent =
+      "Nessun punto. La soluzione è stata mostrata.";
+  }
+}
+
+/* ============ NAVIGAZIONE ============ */
+function moveQuestion(dir) {
+  let r = roundIndex, q = questionIndex + dir;
+  if (q < 0) {
+    if (r === 0) return;
+    r--; q = rounds[r].questions.length - 1;
+  } else if (q >= rounds[roundIndex].questions.length) {
+    if (r === rounds.length - 1) {
+      // Fine del gioco → mostra vincitrice
+      showWinnerScreen();
+      return;
+    }
+    r++; q = 0;
+  }
+  roundIndex = r; questionIndex = q;
+  renderQuestion();
+}
+
+/* ============ TIMER ============ */
+function stopTimer() {
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+function updateTimer() {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  timerDisplay.textContent =
+    String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  timerDisplay.classList.toggle("warn", seconds <= 10 && seconds > 0);
+}
+
+document.getElementById("startTimer").addEventListener("click", () => {
+  if (timerInterval !== null) return;
+  if (seconds <= 0) seconds = 45;
+  updateTimer();
+  timerInterval = setInterval(() => {
+    seconds--;
+    updateTimer();
+    if (seconds <= 10 && seconds > 0) soundTick();
+    if (seconds <= 0) {
+      stopTimer();
+      document.getElementById("status").textContent =
+        "⏰ Tempo scaduto! Rispondete ora.";
+    }
+  }, 1000);
+});
+document.getElementById("pauseTimer").addEventListener("click", stopTimer);
+document.getElementById("resetTimer").addEventListener("click", () => {
+  stopTimer(); seconds = 45; updateTimer();
+});
+
+/* ============ PULSANTI ============ */
+document.getElementById("previousQuestion").addEventListener("click", () => moveQuestion(-1));
+document.getElementById("nextQuestion").addEventListener("click", () => moveQuestion(1));
+document.getElementById("switchTurn").addEventListener("click", switchTurn);
+
+document.getElementById("clearScores").addEventListener("click", () => {
+  teams.forEach(t => t.score = 0);
+  renderScoreboard();
+  document.getElementById("status").textContent = "Punteggi azzerati.";
+});
+
+document.getElementById("restartGame").addEventListener("click", () => {
+  stopTimer();
+  seconds = 45; roundIndex = 0; questionIndex = 0;
+  currentTurn = 0; answered = false;
+  teams.forEach(t => t.score = 0);
+  updateTimer();
+  renderScoreboard();
+  renderQuestion();
+});
+
+/* ============ SCHERMATA VINCITRICE ============ */
+function showWinnerScreen() {
+  stopTimer();
+  const [a, b] = teams;
+  let title, trophy = "🏆";
+  if (a.score > b.score)      title = "Vince la " + a.name + "!";
+  else if (b.score > a.score) title = "Vince la " + b.name + "!";
+  else { title = "Pareggio!"; trophy = "🤝"; }
+
+  document.querySelector(".trophy").textContent = trophy;
+  document.getElementById("winTitle").textContent = title;
+  document.getElementById("finalScores").innerHTML =
+    "<div style='color:var(--blue)'>" + a.name + "<span>" + a.score + "</span></div>" +
+    "<div style='color:var(--red)'>"  + b.name + "<span>" + b.score + "</span></div>";
+
+  winScreen.classList.add("visible");
+  soundWin();
+}
+
+document.getElementById("showWinner").addEventListener("click", showWinnerScreen);
+document.getElementById("closeWin").addEventListener("click", () => {
+  winScreen.classList.remove("visible");
+});
+
+/* ============ AVVIO ============ */
+renderScoreboard();
+renderQuestion();
+updateTimer();
+</script>
+</body>
+</html>
