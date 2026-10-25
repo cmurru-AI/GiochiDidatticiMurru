@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>La Mappa Spezzata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Naskh+Arabic:wght@500;700&display=swap">
+<style>
+/* Layout: scenario illustrato a tutto schermo dietro; sopra, barra del viaggio (livello, lanterne, mappa) e la carta con la prova. Sovrapposizioni a tutto schermo per i passaggi di livello. */
+:root{
+  --ar:#1d5f7a;
+  --panel:rgba(255,252,244,.94); --panel-solid:#fffcf4; --ink:#2a2118; --muted:#6b5d4c; --line:#d9cdb6;
+  --accent:#9c4a1a; --accent-ink:#fff; --gold:#d79a2b; --ok:#2e7d4a; --ok-soft:#dcefdf; --bad:#b8321f; --bad-soft:#f6d9d2;
+  --shade:#d9822b; --blank:#fff8ea; --veil:rgba(20,14,8,.78);
+  --f-display:"Fraunces",Georgia,"Times New Roman",serif; --f-body:"Atkinson Hyperlegible",Verdana,system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ar:#8fcbe0; --panel:rgba(30,25,20,.93); --panel-solid:#1e1914; --ink:#f3ead9; --muted:#c2b39b; --line:#4a3f33;
+  --accent:#f0a46a; --accent-ink:#2a1608; --gold:#f2c063; --ok:#6fcf8e; --ok-soft:#1f3a28; --bad:#ff8a73; --bad-soft:#4a221b;
+  --shade:#e8933a; --blank:#3a3128; --veil:rgba(5,3,2,.84); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ar:#8fcbe0; --panel:rgba(30,25,20,.93); --panel-solid:#1e1914; --ink:#f3ead9; --muted:#c2b39b; --line:#4a3f33;
+  --accent:#f0a46a; --accent-ink:#2a1608; --gold:#f2c063; --ok:#6fcf8e; --ok-soft:#1f3a28; --bad:#ff8a73; --bad-soft:#4a221b;
+  --shade:#e8933a; --blank:#3a3128; --veil:rgba(5,3,2,.84); color-scheme:dark}
+html.big{font-size:20px}
+body{background:#2a2118;color:var(--ink);font-family:var(--f-body);font-size:1.1rem;line-height:1.45;min-height:100vh;overflow-x:hidden}
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#2a2118}
+#bg .scene{position:absolute;inset:-3%;opacity:0;transition:opacity 1.4s ease, transform 14s ease-out;transform:scale(1.06)}
+#bg .scene.on{opacity:1;transform:scale(1)}
+#bg svg{width:100%;height:100%;display:block}
+.app{position:relative;z-index:1;max-width:980px;margin:0 auto;padding-inline:16px;padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);font-weight:900;margin:0;letter-spacing:-.005em;text-wrap:balance}
+.hud{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 18px;align-items:center;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:12px 18px;backdrop-filter:blur(6px)}
+.hud h1{font-size:clamp(1.3rem,2.6vw,1.8rem)}
+.hud .where{color:var(--muted);font-weight:700}
+.hud .row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.lanterns{display:flex;gap:4px;align-items:flex-end}
+.lanterns svg{width:30px;height:44px;overflow:visible}
+.lanterns .flame{transform-origin:15px 24px;transition:transform .5s ease, opacity .5s}
+.lanterns .out .flame{transform:scale(0);opacity:0}
+.lanterns .out .glass{fill:#6b6258;opacity:.35}
+.lanterns .dying .flame{animation:die .9s ease forwards}
+.lanterns .dying .smoke{animation:smoke 1.2s ease-out forwards}
+@keyframes die{0%{transform:scale(1.4)}30%{transform:scale(.6) rotate(-12deg)}60%{transform:scale(.9) rotate(8deg)}100%{transform:scale(0);opacity:0}}
+@keyframes smoke{0%{opacity:.8;transform:translateY(0) scale(.6)}100%{opacity:0;transform:translateY(-26px) scale(1.6)}}
+.nolamp{font-weight:700;color:var(--bad)}
+.steps4{display:flex;gap:6px}
+.steps4 i{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);background:var(--panel-solid)}
+.steps4 i.ok{background:var(--gold);border-color:var(--gold);animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.minimap{width:96px;height:96px}
+.tools{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 13px;border-radius:999px;border:2px solid var(--line);background:var(--panel-solid);color:var(--ink);font:700 .9rem var(--f-body);cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:18px 22px;backdrop-filter:blur(6px)}
+.stage{display:flex;flex-direction:column;gap:14px}
+.qtag{font-weight:700;font-size:.85rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.q{font-family:var(--f-display);font-weight:700;font-size:clamp(1.3rem,2.6vw,1.75rem);margin:0;line-height:1.6}
+.q .fig{display:block;max-width:100%;height:auto;margin:4px 0 12px}
+.fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;line-height:1;margin:0 .12em;font-variant-numeric:tabular-nums;font-family:var(--f-body);font-weight:700}
+.fr>span:first-child{border-bottom:.08em solid currentColor;padding:0 .15em .1em}.fr>span:last-child{padding-top:.1em}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.opts.one{grid-template-columns:1fr}
+@media (max-width:700px){.opts{grid-template-columns:1fr}.hud{grid-template-columns:1fr}}
+.opt,.stepb,.mi{display:flex;align-items:center;gap:12px;text-align:left;padding:13px 17px;border-radius:14px;border:3px solid var(--line);background:var(--panel-solid);color:var(--ink);font:700 1.2rem var(--f-body);cursor:pointer;min-height:3.6rem}
+.opt[aria-pressed="true"],.stepb[aria-pressed="true"],.mi[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 25%,transparent)}
+.opt.yes{border-color:var(--ok);background:var(--ok-soft)} .opt.no{border-color:var(--bad);background:var(--bad-soft)}
+.stepb.yes{border-color:var(--bad);background:var(--bad-soft)}
+.opt:disabled,.stepb:disabled,.mi:disabled{cursor:default}
+.steps{display:flex;flex-direction:column;gap:10px;counter-reset:s}
+.stepb{font-weight:400;font-size:1.1rem}
+.stepb::before{counter-increment:s;content:counter(s);flex:none;display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:50%;background:var(--blank);border:2px solid var(--line);font-weight:700}
+.inp{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.inp output{min-width:6ch;font:700 2.2rem var(--f-body);padding:6px 14px;border:3px solid var(--accent);border-radius:12px;background:var(--panel-solid);text-align:right;font-variant-numeric:tabular-nums}
+.pad{display:grid;grid-template-columns:repeat(6,3.2rem);gap:8px}
+.pad button{height:3.2rem;border-radius:10px;border:2px solid var(--line);background:var(--panel-solid);color:var(--ink);font:700 1.3rem var(--f-body);cursor:pointer}
+.pad .wide{grid-column:span 2;font-size:1rem}
+.match{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 26px}
+.match .col{display:flex;flex-direction:column;gap:10px}
+.mi .tag{margin-left:auto;font-size:.85rem;padding:2px 10px;border-radius:999px;color:#fff}
+.p0{border-color:#c2412d!important}.p1{border-color:#2f62b0!important}.p2{border-color:#2e7d4a!important}
+.tag.p0{background:#c2412d}.tag.p1{background:#2f62b0}.tag.p2{background:#2e7d4a}
+svg.inter{display:block;max-width:100%;height:auto;touch-action:manipulation;user-select:none}
+svg.inter .part,svg.inter .tick{cursor:pointer}
+.hint{color:var(--muted);font-size:.95rem;margin:0}
+.qhead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.helpbtn{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;border:2px solid var(--gold);background:var(--panel-solid);color:var(--ink);font:700 1rem var(--f-body);cursor:pointer}
+.helpbtn svg{width:20px;height:20px}
+.helpbtn:disabled{opacity:.45;cursor:default}
+.helpbox{display:flex;gap:12px;align-items:flex-start;border-radius:14px;padding:12px 16px;background:color-mix(in srgb,var(--gold) 16%,var(--panel-solid));border:2px dashed var(--gold);font-size:1.08rem;animation:pop .35s ease}
+.helpbox b{font-family:var(--f-display)}
+.btn{padding:13px 24px;border-radius:12px;border:2px solid var(--line);background:var(--panel-solid);color:var(--ink);font:700 1.1rem var(--f-body);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.fb{border-radius:14px;padding:14px 18px;font-size:1.08rem;border:2px solid}
+.fb.ok{background:var(--ok-soft);border-color:var(--ok)} .fb.bad{background:var(--bad-soft);border-color:var(--bad)}
+.fb b.t{display:block;font-size:1.2rem;margin-bottom:3px;font-family:var(--f-display)}
+/* effetti */
+.shake{animation:shake .55s}
+@keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-12px) rotate(-.4deg)}30%{transform:translateX(10px) rotate(.4deg)}45%{transform:translateX(-8px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+#flash{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0}
+#flash.bad{background:radial-gradient(ellipse at center,transparent 35%,rgba(190,30,10,.55) 100%);animation:flash .8s ease}
+#flash.good{background:radial-gradient(ellipse at center,transparent 45%,rgba(230,180,60,.45) 100%);animation:flash .7s ease}
+@keyframes flash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+#ov{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--veil);opacity:0;pointer-events:none;transition:opacity .6s}
+#ov.on{opacity:1;pointer-events:auto}
+#ov .ocard{max-width:680px;width:100%;background:var(--panel-solid);border:3px solid var(--gold);border-radius:22px;padding:26px 28px;display:flex;flex-direction:column;gap:14px;align-items:center;text-align:center;transform:translateY(30px) scale(.96);opacity:0;transition:transform .7s cubic-bezier(.2,.8,.2,1) .15s,opacity .6s .15s;max-height:92vh;overflow:auto}
+#ov.on .ocard{transform:none;opacity:1}
+#ov .kick{font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);font-size:.85rem}
+#ov h2{font-size:clamp(1.8rem,4.5vw,2.8rem)}
+#ov p{margin:0;max-width:56ch}
+#ov .bigmap{width:220px;height:220px;max-width:70vw}
+.piece-in{animation:piecein 1.3s cubic-bezier(.2,.9,.2,1.1) both .5s}
+@keyframes piecein{0%{transform:translate(var(--fx),var(--fy)) rotate(-200deg) scale(.2);opacity:0}100%{transform:none;opacity:1}}
+.piece-out{animation:pieceout 1.4s ease-in both .4s}
+@keyframes pieceout{0%{transform:none;opacity:1}100%{transform:translate(var(--fx),var(--fy)) rotate(var(--fr)) scale(.4);opacity:0}}
+canvas#conf{position:fixed;inset:0;z-index:11;pointer-events:none}
+details.teacher{background:var(--panel);border:2px dashed var(--line);border-radius:14px;padding:10px 18px}
+details.teacher summary{cursor:pointer;font-weight:700;color:var(--muted)}
+.set{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:10px 0}
+.set label{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-weight:700;max-width:100%}
+.set input[type=number]{width:3.6em;font:inherit;padding:6px;border-radius:8px;border:2px solid var(--line);background:var(--panel-solid);color:var(--ink)}
+.set select{max-width:100%;font:inherit;padding:6px;border-radius:8px;border:2px solid var(--line);background:var(--panel-solid);color:var(--ink)}
+details.teacher p{max-width:75ch}
+[hidden]{display:none!important}
+/* link di ritorno a Officina Didattica */
+.home-link{align-self:flex-start;display:inline-block;padding:8px 14px;border-radius:999px;border:2px solid var(--line);background:var(--panel-solid);color:var(--ink);font:700 .9rem var(--f-body);text-decoration:none}
+.home-link:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+/* darija: nascosto finché non si attiva il pulsante */
+.ar{display:none}
+html.dar .ar{display:block;width:100%;direction:rtl;text-align:right;font-family:"Noto Naskh Arabic","Geeza Pro","Arial",sans-serif;font-weight:500;color:var(--ar);font-size:.95em;line-height:1.7;margin-top:4px}
+html.dar .ar .fr{font-family:var(--f-body)}
+html.dar .opt,html.dar .stepb,html.dar .mi,html.dar .btn,html.dar .chip,html.dar .helpbtn{flex-wrap:wrap}
+html.dar .btn .ar,html.dar .chip .ar,html.dar .helpbtn .ar{font-size:.85em;margin-top:0;text-align:center}
+html.dar .chip,html.dar .helpbtn{border-radius:14px}
+html.dar .btn.primary .ar,html.dar .chip.exit .ar,html.dar .badge .ar{color:inherit;opacity:.92}
+.ar b{font-weight:700}
+.how{margin:.35rem 0 0;padding-inline-start:1.4em}
+.how li{margin-bottom:2px}
+.ar .how{padding-inline-start:1.6em}
+.mapbox{display:flex;flex-direction:column;align-items:center;gap:6px}
+.stars{display:flex;gap:2px}
+.star{width:22px;height:22px;fill:none;stroke:var(--gold);stroke-width:1.6}
+.star.on{fill:var(--gold)}
+.streak{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-weight:700;font-size:.95rem}
+.streak i{width:14px;height:14px;border-radius:3px;transform:rotate(45deg);border:2px solid var(--gold);display:inline-block}
+.streak i.on{background:var(--gold)}
+.lanterns .relit .flame{animation:relit 1s ease}
+@keyframes relit{0%{transform:scale(0)}50%{transform:scale(1.8)}100%{transform:scale(1)}}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:.85rem}
+.chip.exit{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.obtns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.diary{text-align:left;width:100%}
+.diary table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.diary th,.diary td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center}
+.diary th:first-child,.diary td:first-child{text-align:left}
+.diary .star{width:16px;height:16px;vertical-align:-2px}
+.diary ul{margin:.3rem 0 0;padding-left:1.2em}
+.odiary{width:100%;text-align:left;border:2px dashed var(--line);border-radius:12px;padding:8px 14px}
+.odiary summary{cursor:pointer;font-weight:700;color:var(--muted)}
+.bigstar{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.15rem}
+.bigstar .star{width:44px;height:44px;animation:pop .6s ease .8s both}
+.awards{display:flex;flex-wrap:wrap;gap:16px 30px;justify-content:center;align-items:center;font-weight:700}
+.awards .star{width:34px;height:34px}
+.medal{display:flex;align-items:center;gap:10px;max-width:22rem;text-align:left}
+.medal svg{width:60px;height:60px;flex:none;animation:pop .7s ease 1s both}
+.typ{display:inline-block;padding:1px 10px;margin-right:6px;border-radius:999px;background:var(--bad);color:#fff;font-size:.85rem;font-weight:700}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="bg"></div>
+<div id="flash"></div>
+<canvas id="conf" hidden></canvas>
+
+<div class="app" id="app">
+  <a class="home-link" href="../../">← Officina Didattica</a>
+  <section class="hud" aria-label="Il viaggio">
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <h1>La Mappa Spezzata</h1>
+      <div class="where" id="where"></div>
+      <div class="row">
+        <div class="lanterns" id="lanterns" aria-label="Lanterne accese"></div>
+        <div class="steps4" id="steps4" aria-label="Prove superate in questa tappa"></div>
+      </div>
+      <div class="streak" id="streak" hidden></div>
+      <div class="tools">
+        <button class="chip" id="dar" aria-pressed="false" lang="ar">Darija · الدارجة</button>
+        <button class="chip" id="read">Leggi la domanda</button>
+        <button class="chip" id="big" aria-pressed="false">Testo grande</button>
+        <button class="chip" id="snd" aria-pressed="true">Suoni</button>
+        <button class="chip" id="diaryBtn">Diario di viaggio</button>
+        <button class="chip" id="practiceBtn">Allenamento</button>
+        <button class="chip exit" id="practiceExit" hidden>Torna al viaggio</button>
+      </div>
+    </div>
+    <div class="mapbox"><svg class="minimap" id="minimap" viewBox="0 0 100 100" role="img" aria-label="La mappa: pezzi recuperati"></svg><div class="stars" id="stars" role="img"></div></div>
+  </section>
+
+  <section class="card stage" id="stage">
+    <div class="qhead"><span class="qtag" id="qtag"></span>
+      <button class="helpbtn" id="helpbtn" aria-expanded="false" aria-controls="helpbox"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Un aiuto</button></div>
+    <div class="q" id="q"></div>
+    <div class="helpbox" id="helpbox" hidden aria-live="polite"></div>
+    <div id="body"></div>
+    <div class="actions"><button class="btn primary" id="confirm" disabled>Conferma</button></div>
+    <div class="fb" id="fb" hidden aria-live="polite"></div>
+    <div class="actions"><button class="btn primary" id="next" hidden>Avanti</button></div>
+  </section>
+
+  <details class="teacher">
+    <summary>Per il docente: impostazioni e note</summary>
+    <div class="set">
+      <span style="font-weight:700">Errori consentiti:</span>
+      <label>Tappa 1 <input type="number" id="e0" min="0" max="9"></label>
+      <label>2 <input type="number" id="e1" min="0" max="9"></label>
+      <label>3 <input type="number" id="e2" min="0" max="9"></label>
+      <label>4 <input type="number" id="e3" min="0" max="9"></label>
+      <label>Finale <input type="number" id="e4" min="0" max="9"></label>
+    </div>
+    <div class="set">
+      <label>Quando le lanterne si spengono
+        <select id="restartMode"><option value="zero">si riparte dal porto (da zero)</option><option value="level">si riparte dalla tappa in corso</option></select></label>
+      <label>Aiuti <select id="helpMode"><option value="all">sempre disponibili</option><option value="nofinal">non nell'enigma finale</option><option value="off">disattivati</option></select></label>
+      <button class="btn" id="apply">Applica e ricomincia il viaggio</button>
+    </div>
+    <p><b>Struttura.</b> Quattro tappe e un enigma finale. In ogni tappa servono 4 risposte giuste, pescate a caso da un deposito di 20 prove (molte con numeri che cambiano ogni volta). Ogni errore spegne una lanterna; se si sbaglia a lanterne spente, la mappa vola via. A ogni ripartenza le prove si rimescolano e cambia l'aspetto degli scenari (ora del giorno, disposizione).</p>
+    <p><b>Tappe.</b> 1 · Il Porto delle Vele: che cos'è una frazione, rappresentarla, frazione di una quantità. 2 · Il Bosco degli Specchi: frazioni equivalenti, semplificazione, confronto. 3 · Il Passo delle Nevi: addizione e sottrazione, problemi. 4 · Il Deserto delle Dune: moltiplicazione, divisione, numeri misti. Finale · La Torre dei Venti: un problema a più passaggi, con un solo tentativo.</p>
+    <p><b>Aiuti.</b> Ogni prova ha un pulsante «Un aiuto» che dà uno spunto per ragionare, senza la risposta. Usarlo non costa lanterne: serve a sbloccarsi, non a punire. Si può togliere nell'enigma finale o disattivare del tutto.</p>
+    <p><b>Per motivare.</b> Tre risposte giuste di fila riaccendono una lanterna spenta. Una tappa senza errori vale una stella; chi completa il viaggio senza aiuti riceve la Medaglia del Cartografo. Il Diario di viaggio mostra giuste, errori e aiuti per tappa e gli argomenti da ripassare; nelle risposte scritte il gioco riconosce gli errori tipici (per esempio sommare anche i denominatori). Con «Allenamento» ci si esercita su una sola tappa senza lanterne. Il viaggio si salva da solo su questo dispositivo: se la pagina si ricarica, si può riprendere.</p>
+    <p><b>Spiegazioni e darija.</b> Dopo ogni risposta, giusta o sbagliata, compare «Come si fa»: il procedimento in 2-3 passaggi con i numeri della prova. Il pulsante «Darija · الدارجة» mostra sotto ogni testo la traduzione in darija (grafia araba); i termini matematici sono quelli dell'arabo scolastico, spesso con la parola italiana tra parentesi. La traduzione è una prima versione da far rivedere a un madrelingua. La lettura ad alta voce resta in italiano.</p>
+    <p><b>Inclusione.</b> Ripartire da zero può scoraggiare chi è più fragile: per questi alunni conviene aumentare gli errori consentiti o scegliere «si riparte dalla tappa in corso». Le impostazioni restano salvate su questo dispositivo.</p>
+  </details>
+</div>
+
+<div id="ov" role="dialog" aria-modal="true" aria-live="polite"><div class="ocard" id="ocard"></div></div>
+
+<script>
+/* La Mappa Spezzata — deposito delle domande (bilingue: italiano + darija).
+   Ogni elemento è una funzione che genera una prova, spesso con numeri casuali.
+   Tipi: mc (scelta), input (scrittura), shade (colora), line (retta), match (abbina), err (trova l'errore).
+   B(it, ar): testo italiano con la traduzione in darija sotto (visibile solo con il pulsante Darija).
+   HOW([...it],[...ar]): spiegazione del procedimento a passaggi. */
+(function(){
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const red=(n,d)=>{const g=gcd(n,d)||1;return [n/g,d/g]};
+const PAIRS=[]; // raccolta delle coppie italiano/darija (per la tabella di revisione)
+const B=(it,ar)=>{if(window.__collect)PAIRS.push([it,ar]);return `<span class="it">${it}</span><span class="ar" dir="rtl" lang="ar">${ar}</span>`};
+const HOW=(it,ar)=>B(`<b>Come si fa</b><ol class="how">${it.map(s=>`<li>${s}</li>`).join("")}</ol>`,`<b>كيفاش كنديرو</b><ol class="how">${ar.map(s=>`<li>${s}</li>`).join("")}</ol>`);
+const fr=(n,d)=>d===1?`<span data-say="${n}">${n}</span>`:`<span class="fr" data-say="${n} fratto ${d}"><span>${n}</span><span>${d}</span></span>`;
+const frR=(n,d)=>{const [a,b]=red(n,d);return fr(a,b)};
+const mixed=(w,n,d)=>`<span data-say="${w} e ${n} fratto ${d}">${w} e ${fr(n,d)}</span>`;
+const mixedA=(w,n,d)=>`<bdi>${w} و ${fr(n,d)}</bdi>`;
+function pie(k,d,s=150){
+  const r=s/2-4,c=s/2;let p="";
+  for(let i=0;i<d;i++){const a0=-Math.PI/2+i*2*Math.PI/d,a1=a0+2*Math.PI/d;
+    const x0=c+r*Math.cos(a0),y0=c+r*Math.sin(a0),x1=c+r*Math.cos(a1),y1=c+r*Math.sin(a1);
+    p+=`<path d="M${c},${c} L${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 0 1 ${x1.toFixed(1)},${y1.toFixed(1)} Z" fill="${i<k?"var(--shade)":"var(--blank)"}" stroke="var(--ink)" stroke-width="2"/>`}
+  return `<svg class="fig no-say" viewBox="0 0 ${s} ${s}" width="${s}" height="${s}" aria-hidden="true">${p}</svg>`;
+}
+function bar(k,d,w=360){
+  const h=56,pw=(w-4)/d;let p="";
+  for(let i=0;i<d;i++)p+=`<rect x="${2+i*pw}" y="2" width="${pw}" height="${h}" fill="${i<k?"var(--shade)":"var(--blank)"}" stroke="var(--ink)" stroke-width="2"/>`;
+  return `<svg class="fig no-say" viewBox="0 0 ${w} ${h+4}" width="${w}" aria-hidden="true">${p}</svg>`;
+}
+const lcm=(a,b)=>a*b/gcd(a,b);
+
+/* ===================== TAPPA 1 · Il Porto delle Vele ===================== */
+const L1=[
+()=>{const d=pick([4,5,6,8]),n=R(1,d-1);return {type:"shade",shape:"bar",d,target:[n,d],
+  q:B(`Colora ${fr(n,d)} della vela.`,`لوّن ${fr(n,d)} ديال الشراع.`),
+  help:B(`Il numero sotto la linea (${d}) dice in quante parti è divisa la vela. Il numero sopra dice quante parti colorare.`,`الرقم اللي لتحت (${d}) كيقول لينا على شحال من طرف مقسوم الشراع. الرقم اللي لفوق كيقول شحال من طرف خاصنا نلوّنو.`),
+  ex:HOW([`Guarda il denominatore, ${d}: la vela è divisa in ${d} parti uguali.`,`Guarda il numeratore, ${n}: colora ${n} parti.`,`Hai colorato ${n} parti su ${d}: ${fr(n,d)}.`],
+         [`شوف المقام (denominatore)، ${d}: الشراع مقسوم على ${d} طراف متساويين.`,`شوف البسط (numeratore)، ${n}: لوّن ${n} طراف.`,`لوّنتي ${n} طراف من ${d}: ${fr(n,d)}.`])}},
+()=>{const d=pick([3,4,6,8]),n=R(1,d-1);return {type:"shade",shape:"pie",d,target:[n,d],
+  q:B(`Colora ${fr(n,d)} della ruota del timone.`,`لوّن ${fr(n,d)} ديال الرويضة ديال البابور.`),
+  help:B(`Il numero sotto la linea (${d}) dice in quante fette è divisa la ruota. Quello sopra dice quante fette colorare.`,`الرقم اللي لتحت (${d}) كيقول على شحال من طرف مقسومة الرويضة. اللي لفوق كيقول شحال من طرف نلوّنو.`),
+  ex:HOW([`La ruota è divisa in ${d} fette uguali (denominatore).`,`Ne coloro ${n} (numeratore).`,`${n} fette su ${d} = ${fr(n,d)}.`],
+         [`الرويضة مقسومة على ${d} طراف متساويين (المقام).`,`كنلوّنو ${n} منهم (البسط).`,`${n} طراف من ${d} = ${fr(n,d)}.`])}},
+()=>{const d=pick([5,6,8]);let k;do{k=R(1,d-1)}while(2*k===d);return {type:"mc",
+  q:pie(k,d)+B("Che frazione della torta è colorata?","شنو هو الكسر ديال الكيكة اللي ملوّن؟"),
+  opts:[[fr(k,d),1],[fr(d-k,d),0,B("Questa è la parte non colorata.","هادي هي الطراف اللي ماشي ملوّنين.")],[fr(k,d-k),0,B(`Hai confrontato le parti colorate con quelle bianche. Il denominatore conta tutte le parti: ${d}.`,`قارنتي الملوّنين مع البيضين. المقام كيحسب كاع الطراف: ${d}.`)],[fr(d,k),0,B("Numeratore e denominatore sono scambiati.","البسط والمقام تبدّلو بلاصتهم.")]],
+  help:B("Conta prima tutte le fette: quel numero va sotto la linea. Poi conta solo quelle colorate.","حسب الأول كاع الطراف: داك الرقم كيتكتب لتحت. من بعد حسب غير الملوّنين."),
+  ex:HOW([`Conto tutte le fette: ${d}. Questo è il denominatore.`,`Conto le fette colorate: ${k}. Questo è il numeratore.`,`La frazione colorata è ${fr(k,d)}.`],[`كنحسبو كاع الطراف: ${d}. هادا هو المقام.`,`كنحسبو الطراف الملوّنين: ${k}. هادا هو البسط.`,`الكسر الملوّن هو ${fr(k,d)}.`])}},
+()=>{const d=pick([4,5,6,8,10]),k=R(1,d-1);return {type:"input",ans:[k,d],
+  q:bar(k,d)+B("Scrivi la frazione colorata della vela.","كتب الكسر الملوّن ديال الشراع."),
+  traps:[[[k,d-k],B("Hai messo sotto le parti bianche: sotto va il numero di tutte le parti.","حطّيتي لتحت الطراف البيضين: لتحت خاص عدد كاع الطراف.")],[[d,k],B("Numeratore e denominatore sono scambiati.","البسط والمقام تبدّلو بلاصتهم.")]],
+  help:B("Quante parti ha la vela in tutto? Quante sono colorate? La frazione si scrive «colorate / tutte».","شحال من طرف فالشراع كاملين؟ شحال منهم ملوّنين؟ الكسر كيتكتب «الملوّنين / كاع الطراف»."),
+  ex:HOW([`Parti in tutto: ${d} (denominatore).`,`Parti colorate: ${k} (numeratore).`,`Scrivo ${k}/${d}: ${fr(k,d)}.`],[`الطراف كاملين: ${d} (المقام).`,`الطراف الملوّنين: ${k} (البسط).`,`كنكتبو ${k}/${d}: ${fr(k,d)}.`])}},
+()=>{const d=pick([5,6,8]);let k;do{k=R(1,d-1)}while(2*k===d);return {type:"mc",
+  q:pie(k,d)+B("Che frazione della torta NON è colorata?","شنو هو الكسر ديال الكيكة اللي ماشي ملوّن؟"),
+  opts:[[fr(d-k,d),1],[fr(k,d),0,B("Questa è la parte colorata.","هادي هي الطراف الملوّنين.")],[fr(d-k,k),0,B(`Il denominatore deve contare tutte le parti: ${d}.`,`المقام خاصو يحسب كاع الطراف: ${d}.`)],[fr(d,d-k),0,B("Numeratore e denominatore sono scambiati.","البسط والمقام تبدّلو بلاصتهم.")]],
+  help:B("Questa volta conta le parti bianche. Sotto la linea resta il numero di tutte le parti.","هاد المرة حسب الطراف البيضين. لتحت كيبقى عدد كاع الطراف."),
+  ex:HOW([`Parti in tutto: ${d}.`,`Parti bianche: ${d} − ${k} = ${d-k}.`,`La parte non colorata è ${fr(d-k,d)}.`],[`الطراف كاملين: ${d}.`,`الطراف البيضين: ${d} − ${k} = ${d-k}.`,`الجزء اللي ماشي ملوّن هو ${fr(d-k,d)}.`])}},
+()=>{const d=R(5,9),n=R(1,d-1);return {type:"mc",
+  q:B(`Nella frazione ${fr(n,d)} il denominatore ${d} indica…`,`فالكسر ${fr(n,d)}، المقام ${d} كيعني…`),
+  opts:[[B("in quante parti uguali è diviso l'intero","على شحال من طرف متساوي مقسوم الكل"),1],[B("quante parti si prendono","شحال من طرف كناخدو"),0,B("Questo lo dice il numeratore, il numero sopra la linea.","هادشي كيقولو البسط، الرقم اللي لفوق.")],[B("quanti interi ci sono","شحال من وحدة كاملة كاينة"),0,B("Il denominatore non conta gli interi, ma le parti di un intero.","المقام ما كيحسبش الوحدات الكاملة، كيحسب الطراف ديال وحدة.")]],
+  help:B("Pensa a una pizza: il numero sotto la linea racconta in quanti pezzi l'hai tagliata.","فكّر فبيتزا: الرقم اللي لتحت كيقول على شحال من طرف قطعتيها."),
+  ex:HOW([`Il denominatore è il numero sotto la linea: ${d}.`,`Dice in quante parti uguali si divide l'intero.`,`Il numeratore ${n} dice quante parti si prendono.`],[`المقام هو الرقم اللي لتحت: ${d}.`,`كيقول على شحال من طرف متساوي كنقسمو الكل.`,`البسط ${n} كيقول شحال من طرف كناخدو.`])}},
+()=>{const d=R(5,9),n=R(2,d-1);return {type:"mc",
+  q:B(`Nella frazione ${fr(n,d)} il numeratore ${n} indica…`,`فالكسر ${fr(n,d)}، البسط ${n} كيعني…`),
+  opts:[[B("quante parti si prendono","شحال من طرف كناخدو"),1],[B("in quante parti è diviso l'intero","على شحال من طرف مقسوم الكل"),0,B("Questo lo dice il denominatore, sotto la linea.","هادشي كيقولو المقام، اللي لتحت.")],[B("quanto è grande ogni parte","شحال كبير كل طرف"),0,B("La grandezza di ogni parte dipende dal denominatore.","الكبر ديال كل طرف كيتعلّق بالمقام.")]],
+  help:B("Il numero sopra la linea conta qualcosa che prendi, mangi o colori.","الرقم اللي لفوق كيحسب داكشي اللي كتاخد، كتاكل ولا كتلوّن."),
+  ex:HOW([`Il numeratore è il numero sopra la linea: ${n}.`,`Conta le parti che si prendono.`,`Qui si prendono ${n} parti su ${d}.`],[`البسط هو الرقم اللي لفوق: ${n}.`,`كيحسب الطراف اللي كناخدو.`,`هنا كناخدو ${n} طراف من ${d}.`])}},
+()=>{const [t,n,d]=pick([[12,1,4],[10,1,5],[15,1,3],[8,1,2],[20,1,4],[18,1,6],[12,3,4]]);const one=t/d,res=t*n/d;return {type:"input",ans:[res,1],
+  q:B(`Nel porto ci sono ${t} barche. ${n===1?"":"I "}${fr(n,d)} delle barche ${n===1?"ha":"hanno"} la vela rossa. Quante sono le barche con la vela rossa?`,`فالمرسى كاينين ${t} ديال الفلايك. ${fr(n,d)} ديال الفلايك عندهم شراع حمر. شحال من فلوكة عندها شراع حمر؟`),
+  traps:n>1?[[[one,1],B("Hai trovato una sola parte: ora moltiplica per il numeratore.","لقيتي غير طرف واحد: دابا ضرب فالبسط.")]]:[],
+  help:B("Trovare un quarto di un numero vuol dire dividerlo in 4 gruppi uguali. Se il numero sopra la linea è più di 1, prendi più gruppi.","باش تلقى الربع ديال شي عدد، قسمو على 4 ديال المجموعات متساويين. إلا كان الرقم اللي لفوق كثر من 1، خود كثر من مجموعة."),
+  ex:HOW([`Divido le ${t} barche in ${d} gruppi uguali: ${t} : ${d} = ${one}.`,...(n>1?[`Prendo ${n} gruppi: ${one} × ${n} = ${res}.`]:[]),`Le barche con la vela rossa sono ${res}.`],[`كنقسمو ${t} فلايك على ${d} مجموعات متساويين: ${t} : ${d} = ${one}.`,...(n>1?[`كناخدو ${n} مجموعات: ${one} × ${n} = ${res}.`]:[]),`الفلايك اللي عندهم شراع حمر هوما ${res}.`])}},
+()=>{let a,b;do{a=pick([2,3,4,5,6,8,10]);b=pick([2,3,4,5,6,8,10])}while(a===b);const s=Math.min(a,b),l=Math.max(a,b);return {type:"mc",
+  q:B("Quale frazione è più grande?","أشمن كسر هو الكبير؟"),
+  opts:[[fr(1,s),1],[fr(1,l),0,B(`${l} è più grande di ${s}, ma dividere in ${l} parti dà pezzi più piccoli.`,`${l} كبر من ${s}، ولكن إلا قسمنا على ${l} كيطلعو الطراف صغار.`)]],
+  help:B("Immagina la stessa torta divisa tra tanti amici oppure tra pochi: in quale caso la fetta è più grande?","تخيّل نفس الكيكة مقسومة على بزاف ديال الصحاب ولا على شوية: فاين الطرف كيكون كبير؟"),
+  ex:HOW([`Tutte e due le frazioni prendono 1 parte.`,`${fr(1,s)}: l'intero è diviso in ${s} parti. ${fr(1,l)}: in ${l} parti.`,`Meno parti = parti più grandi. Quindi ${fr(1,s)} è più grande.`],[`بجوج الكسور كياخدو طرف واحد.`,`${fr(1,s)}: الكل مقسوم على ${s}. ${fr(1,l)}: على ${l}.`,`قلّ الطراف = طراف كبار. إذن ${fr(1,s)} هو الكبير.`])}},
+()=>{const d=R(3,12);return {type:"input",ans:[d,1],
+  q:B(`Quante parti da ${fr(1,d)} servono per fare un intero?`,`شحال من طرف ديال ${fr(1,d)} خاصنا باش نكمّلو وحدة كاملة؟`),
+  help:B("Il denominatore dice in quante parti è stato diviso l'intero. Quante di quelle parti servono per averlo tutto?","المقام كيقول على شحال من طرف تقسم الكل. شحال من طرف خاصنا باش يكون كامل؟"),
+  ex:HOW([`${fr(1,d)} vuol dire: l'intero diviso in ${d} parti, ne prendo una.`,`Per avere tutto l'intero servono tutte le ${d} parti.`,`${d} × ${fr(1,d)} = ${fr(d,d)} = 1.`],[`${fr(1,d)} كتعني: الكل مقسوم على ${d}، وكناخدو طرف واحد.`,`باش يكون الكل كامل خاصنا كاع ${d} طراف.`,`${d} × ${fr(1,d)} = ${fr(d,d)} = 1.`])}},
+()=>({type:"match",q:B("Abbina le parole alla frazione.","ربط الكلمات مع الكسر."),
+  pairs:[[B("metà","النص"),fr(1,2)],[B("un terzo","الثلث"),fr(1,3)],[B("un quarto","الربع"),fr(1,4)]],
+  help:B("Pensa a quante parti uguali servono: «metà» vuol dire dividere in 2.","فكّر شحال من طرف متساوي خاصنا: «النص» كيعني نقسمو على 2."),
+  ex:HOW(["Metà: l'intero diviso in 2 → 1/2.","Un terzo: diviso in 3 → 1/3.","Un quarto: diviso in 4 → 1/4."],["النص: الكل مقسوم على 2 ← 1/2.","الثلث: مقسوم على 3 ← 1/3.","الربع: مقسوم على 4 ← 1/4."])}),
+()=>({type:"mc",
+  q:B("Sara divide una pizza in 4 pezzi: uno grande e tre piccoli. Dice che il pezzo grande è un quarto della pizza. Ha ragione?","سارة قسمات بيتزا على 4 ديال الطراف: واحد كبير وثلاثة صغار. كتقول بلي الطرف الكبير هو الربع ديال البيتزا. واش عندها الحق؟"),
+  opts:[[B("No: si parla di quarti solo se i 4 pezzi sono uguali","لا: كنقولو ربع غير إلا كانو 4 طراف متساويين"),1],[B("Sì: i pezzi sono 4","إيه: الطراف هوما 4"),0,B("Contare i pezzi non basta: devono essere uguali.","ماشي غير نحسبو الطراف: خاصهم يكونو متساويين.")],[B("Sì: il pezzo grande è sempre 1/4","إيه: الطرف الكبير ديما هو 1/4"),0,B("Il pezzo grande è più di un quarto.","الطرف الكبير كثر من الربع.")]],
+  help:B("Per parlare di quarti, come devono essere i quattro pezzi tra loro?","باش نقولو ربع، كيفاش خاصهم يكونو الأربعة ديال الطراف؟"),
+  ex:HOW(["Una frazione divide l'intero in parti uguali.","I pezzi di Sara non sono uguali.","Quindi il pezzo grande non è un quarto: è di più."],["الكسر كيقسم الكل لطراف متساويين.","الطراف ديال سارة ماشي متساويين.","إذن الطرف الكبير ماشي ربع: كثر منو."])}),
+()=>{const d=pick([3,4,5,6,8]),n=R(1,d-1);return {type:"line",max:1,sub:d,target:[n,d],
+  q:B(`Tocca sulla retta il punto ${fr(n,d)}.`,`ضغط على المستقيم فالنقطة ${fr(n,d)}.`),
+  help:B(`Tra 0 e 1 ci sono ${d} tratti uguali: ognuno vale ${fr(1,d)}. Parti da 0 e conta i tratti.`,`بين 0 و 1 كاينين ${d} طراف متساويين: كل واحد كيسوى ${fr(1,d)}. بدا من 0 وحسب.`),
+  ex:HOW([`Tra 0 e 1 la retta è divisa in ${d} tratti uguali.`,`Ogni tratto vale ${fr(1,d)}.`,`Parto da 0 e conto ${n} tratti: arrivo a ${fr(n,d)}.`],[`بين 0 و 1 المستقيم مقسوم على ${d} طراف متساويين.`,`كل طرف كيسوى ${fr(1,d)}.`,`كنبداو من 0 وكنحسبو ${n} طراف: كنوصلو ل ${fr(n,d)}.`])}},
+()=>{const d=pick([4,6,8]);return {type:"line",max:1,sub:d,target:[1,2],
+  q:B("La barca deve fermarsi a metà strada tra 0 e 1. Tocca il punto giusto.","الفلوكة خاصها توقف فالنص ديال الطريق بين 0 و 1. ضغط على النقطة الصحيحة."),
+  help:B("Quanti tratti ci sono tra 0 e 1? Metà strada è a metà di quei tratti.","شحال من طرف كاين بين 0 و 1؟ النص ديال الطريق هو النص ديال هاد الطراف."),
+  ex:HOW([`Tra 0 e 1 ci sono ${d} tratti.`,`La metà di ${d} è ${d/2}.`,`Il punto è ${fr(d/2,d)} = ${fr(1,2)}.`],[`بين 0 و 1 كاينين ${d} طراف.`,`النص ديال ${d} هو ${d/2}.`,`النقطة هي ${fr(d/2,d)} = ${fr(1,2)}.`])}},
+()=>{const d=R(3,9);return {type:"mc",
+  q:B("Quale frazione è uguale a un intero?","أشمن كسر كيساوي وحدة كاملة؟"),
+  opts:[[fr(d,d),1],[fr(1,d),0,B("È una sola parte.","هادا غير طرف واحد.")],[fr(d,1),0,B(`Vale ${d} interi.`,`كيساوي ${d} ديال الوحدات.`)],[fr(0,d),0,B("Vale zero.","كيساوي صفر.")]],
+  help:B("«Un intero» vuol dire «tutte le parti». Quale frazione prende tutte le parti?","«وحدة كاملة» كتعني «كاع الطراف». أشمن كسر كياخد كاع الطراف؟"),
+  ex:HOW([`L'intero è diviso in ${d} parti.`,`Per avere tutto prendo tutte le ${d} parti.`,`${fr(d,d)} = 1: numeratore e denominatore sono uguali.`],[`الكل مقسوم على ${d} طراف.`,`باش ناخدو الكل كناخدو كاع ${d} طراف.`,`${fr(d,d)} = 1: البسط والمقام متساويين.`])}},
+()=>{const d=pick([6,8,10]),k=R(1,d-2);return {type:"input",ans:[d-k,d],
+  q:B(`Hai ${fr(k,d)} di pizza. Che frazione manca per avere la pizza intera?`,`عندك ${fr(k,d)} ديال البيتزا. شنو هو الكسر اللي ناقص باش تكون البيتزا كاملة؟`),
+  traps:[[[k,d],B("Questa è la pizza che hai già, non quella che manca.","هادي هي البيتزا اللي عندك، ماشي اللي ناقصة.")]],
+  help:B("La pizza intera ha tante parti quante dice il denominatore. Quante ne hai già? Quante ne mancano?","البيتزا الكاملة فيها عدد الطراف اللي كيقول المقام. شحال عندك؟ شحال ناقص؟"),
+  ex:HOW([`La pizza intera è ${fr(d,d)}.`,`Ne hai ${k} parti: mancano ${d} − ${k} = ${d-k} parti.`,`Manca ${fr(d-k,d)}.`],[`البيتزا الكاملة هي ${fr(d,d)}.`,`عندك ${k} طراف: ناقصين ${d} − ${k} = ${d-k}.`,`ناقص ${fr(d-k,d)}.`])}},
+()=>{let n,d;do{d=R(2,6);n=R(d+1,2*d+3)}while(n%d===0);return {type:"mc",
+  q:B(`La frazione ${fr(n,d)} è…`,`الكسر ${fr(n,d)} هو…`),
+  opts:[[B("impropria","كسر غير حقيقي (impropria)"),1],[B("propria","كسر حقيقي (propria)"),0,B("Una frazione propria ha il numeratore più piccolo del denominatore.","الكسر الحقيقي البسط ديالو صغر من المقام.")],[B("apparente","كسر ظاهري (apparente)"),0,B(`È apparente quando il numeratore è un multiplo del denominatore: ${n} non lo è.`,`كيكون ظاهري إلا كان البسط مضاعف ديال المقام: ${n} ماشي هكا.`)]],
+  help:B("Confronta il numero sopra e quello sotto la linea: quale dei due è più grande?","قارن الرقم اللي لفوق مع اللي لتحت: أشمن واحد كبر؟"),
+  ex:HOW([`Confronto: numeratore ${n}, denominatore ${d}.`,`${n} è più grande di ${d}: la frazione supera l'intero.`,`${n} non è un multiplo di ${d}, quindi non è un intero: è impropria.`],[`كنقارنو: البسط ${n}، المقام ${d}.`,`${n} كبر من ${d}: الكسر كيفوت الوحدة.`,`${n} ماشي مضاعف ديال ${d}، إذن ماشي عدد صحيح: هو كسر غير حقيقي.`])}},
+()=>{const d=R(2,5),m=R(2,3);return {type:"mc",
+  q:B("Quale frazione è apparente, cioè uguale a un numero intero?","أشمن كسر ظاهري، يعني كيساوي عدد صحيح؟"),
+  opts:[[fr(d*m,d),1],[fr(d,d*m),0,B("È più piccola di 1, non è un intero.","صغر من 1، ماشي عدد صحيح.")],[fr(d*m+1,d),0,B(`${d*m+1} non è un multiplo di ${d}.`,`${d*m+1} ماشي مضاعف ديال ${d}.`)],[fr(1,d),0,B("È una sola parte.","هادا غير طرف واحد.")]],
+  help:B("Una frazione è un numero intero quando la divisione «sopra : sotto» non ha resto.","الكسر كيكون عدد صحيح إلا كانت القسمة «لفوق : لتحت» بلا باقي."),
+  ex:HOW([`Divido numeratore per denominatore: ${d*m} : ${d} = ${m}.`,`Non c'è resto.`,`Quindi ${fr(d*m,d)} = ${m}: è apparente.`],[`كنقسمو البسط على المقام: ${d*m} : ${d} = ${m}.`,`ما كاينش الباقي.`,`إذن ${fr(d*m,d)} = ${m}: كسر ظاهري.`])}},
+()=>{const [t,d]=pick([[20,5],[30,3],[24,4],[50,10],[36,6],[40,8]]);return {type:"input",ans:[t/d,1],
+  q:B(`Un pescatore vende ${fr(1,d)} di ${t} euro di pesce al mercato del mattino. Quanti euro sono?`,`واحد الصيّاد باع ${fr(1,d)} من ${t} أورو ديال الحوت فالسوق ديال الصباح. شحال من أورو؟`),
+  traps:[[[t*d,1],B("Hai moltiplicato: per trovare una parte bisogna dividere.","ضربتي: باش تلقى طرف خاصك تقسم.")]],
+  help:B("Dividi la somma in tante parti uguali quante dice il denominatore.","قسم المبلغ على عدد الطراف اللي كيقول المقام."),
+  ex:HOW([`${fr(1,d)} vuol dire: divido in ${d} parti uguali e ne prendo una.`,`${t} : ${d} = ${t/d}.`,`Sono ${t/d} euro.`],[`${fr(1,d)} كتعني: كنقسمو على ${d} طراف متساويين وكناخدو واحد.`,`${t} : ${d} = ${t/d}.`,`هوما ${t/d} أورو.`])}},
+()=>{const t=pick([10,12]);let k;do{k=R(2,t-3)}while(2*k===t);return {type:"mc",
+  q:B(`Su ${t} gabbiani, ${k} stanno volando. Che frazione dei gabbiani vola?`,`من ${t} ديال النوارس، ${k} كيطيرو. شنو هو الكسر ديال النوارس اللي كيطيرو؟`),
+  opts:[[fr(k,t),1],[fr(k,t-k),0,B("Hai confrontato quelli che volano con quelli fermi: il denominatore è il totale.","قارنتي اللي كيطيرو مع اللي واقفين: المقام هو العدد الكامل.")],[fr(t-k,t),0,B("Questi sono i gabbiani fermi.","هادو هوما النوارس اللي واقفين.")],[fr(t,k),0,B("Numeratore e denominatore sono scambiati.","البسط والمقام تبدّلو بلاصتهم.")]],
+  help:B("Sotto la linea va il numero di tutti i gabbiani, sopra quelli che volano.","لتحت كيتكتب عدد كاع النوارس، ولفوق اللي كيطيرو."),
+  ex:HOW([`Tutti i gabbiani: ${t} (denominatore).`,`Quelli che volano: ${k} (numeratore).`,`La frazione è ${fr(k,t)}.`],[`كاع النوارس: ${t} (المقام).`,`اللي كيطيرو: ${k} (البسط).`,`الكسر هو ${fr(k,t)}.`])}},
+];
+
+/* ===================== TAPPA 2 · Il Bosco degli Specchi ===================== */
+const L2=[
+()=>{const [n,d]=pick([[2,3],[3,4],[1,5],[3,5],[5,6],[2,7]]),m=R(2,4);return {type:"input",ans:[n*m,1],
+  q:B(`Completa: ${fr(n,d)} = ${fr("?",d*m)}`,`كمّل: ${fr(n,d)} = ${fr("?",d*m)}`),
+  traps:[[[n+d*m-d,1],B("Hai aggiunto lo stesso numero sopra e sotto: per una frazione equivalente si moltiplica.","زدتي نفس الرقم لفوق ولتحت: باش يكون الكسر مكافئ خاصنا نضربو.")]],
+  help:B("Guarda i denominatori: per quale numero è stato moltiplicato quello di sinistra? Fai lo stesso con il numeratore.","شوف المقامات: فشحال تضرب المقام اللي على اليسار؟ دير نفس الشي مع البسط."),
+  ex:HOW([`Il denominatore passa da ${d} a ${d*m}: è stato moltiplicato per ${m}.`,`Moltiplico per ${m} anche il numeratore: ${n} × ${m} = ${n*m}.`,`${fr(n,d)} = ${fr(n*m,d*m)}.`],[`المقام تبدّل من ${d} ل ${d*m}: تضرب ف ${m}.`,`كنضربو حتى البسط ف ${m}: ${n} × ${m} = ${n*m}.`,`${fr(n,d)} = ${fr(n*m,d*m)}.`])}},
+()=>{const [n,d]=pick([[3,4],[2,5],[1,3],[4,7]]);return {type:"mc",
+  q:B(`Quale frazione è equivalente a ${fr(n,d)}?`,`أشمن كسر مكافئ (equivalente) ل ${fr(n,d)}؟`),
+  opts:[[fr(2*n,2*d),1],[fr(n+1,d+1),0,B("Aggiungere 1 sopra e sotto non dà una frazione equivalente.","إلا زدنا 1 لفوق ولتحت ما كيطلعش كسر مكافئ.")],[fr(n,2*d),0,B("Hai moltiplicato solo il denominatore: così le parti diventano più piccole.","ضربتي غير المقام: هكا الطراف كيصغرو.")],[fr(2*n,d),0,B("Hai moltiplicato solo il numeratore: così la frazione raddoppia.","ضربتي غير البسط: هكا الكسر كيتضاعف.")]],
+  help:B("Una frazione equivalente si ottiene moltiplicando sopra e sotto per lo stesso numero.","الكسر المكافئ كنلقاوه إلا ضربنا لفوق ولتحت فنفس الرقم."),
+  ex:HOW([`Moltiplico numeratore e denominatore per lo stesso numero, 2.`,`${n} × 2 = ${2*n} e ${d} × 2 = ${2*d}.`,`${fr(n,d)} = ${fr(2*n,2*d)}: stessa quantità, pezzi più piccoli.`],[`كنضربو البسط والمقام فنفس الرقم، 2.`,`${n} × 2 = ${2*n} و ${d} × 2 = ${2*d}.`,`${fr(n,d)} = ${fr(2*n,2*d)}: نفس الكمية، طراف صغار.`])}},
+()=>{const [n,d]=pick([[12,18],[8,12],[15,25],[14,21],[18,24],[20,30],[16,20]]);const g=gcd(n,d),[a,b]=red(n,d);return {type:"input",reduce:true,ans:[a,b],
+  q:B(`Riduci ai minimi termini la frazione ${fr(n,d)}.`,`بسّط (riduci) الكسر ${fr(n,d)} حتى لآخر.`),
+  help:B("Cerca un numero che divida sia il numeratore sia il denominatore. Ripeti finché non ne trovi più.","قلّب على رقم كيقسم البسط والمقام بجوج. عاود حتى ما تلقى حتى رقم."),
+  ex:HOW([`Cerco il numero più grande che divide sia ${n} sia ${d}: è ${g}.`,`Divido sopra e sotto per ${g}: ${n} : ${g} = ${a}, ${d} : ${g} = ${b}.`,`${fr(a,b)} non si può più semplificare.`],[`كنقلّبو على أكبر رقم كيقسم ${n} و ${d}: هو ${g}.`,`كنقسمو لفوق ولتحت على ${g}: ${n} : ${g} = ${a}، ${d} : ${g} = ${b}.`,`${fr(a,b)} ما بقاش كيتبسّط.`])}},
+()=>{const d=R(7,12),a=R(1,d-2),b=R(a+1,d-1);return {type:"mc",
+  q:B("Quale frazione è più grande?","أشمن كسر هو الكبير؟"),
+  opts:[[fr(b,d),1],[fr(a,d),0,B(`Stesso denominatore: vince chi prende più parti, ${b} contro ${a}.`,`نفس المقام: كيربح اللي كياخد طراف كثر، ${b} ضد ${a}.`)]],
+  help:B("I pezzi hanno la stessa grandezza: vince chi ne prende di più.","الطراف عندهم نفس الكبر: كيربح اللي كياخد كثر."),
+  ex:HOW([`Il denominatore è lo stesso: ${d}. I pezzi sono uguali.`,`Confronto i numeratori: ${b} > ${a}.`,`Quindi ${fr(b,d)} è più grande.`],[`المقام هو هو: ${d}. الطراف متساويين.`,`كنقارنو البسوط: ${b} > ${a}.`,`إذن ${fr(b,d)} هو الكبير.`])}},
+()=>{const n=R(2,5),d1=R(n+1,7),d2=R(d1+1,10);return {type:"mc",
+  q:B("Quale frazione è più grande?","أشمن كسر هو الكبير؟"),
+  opts:[[fr(n,d1),1],[fr(n,d2),0,B("Stesso numeratore: più grande è il denominatore, più piccole sono le parti.","نفس البسط: كلما كبر المقام، كيصغرو الطراف.")]],
+  help:B("Si prende lo stesso numero di pezzi. Quali pezzi sono più grandi: quelli di una torta divisa in poche parti o in tante?","كناخدو نفس العدد ديال الطراف. أشمن طراف كبار: ديال كيكة مقسومة على شوية ولا على بزاف؟"),
+  ex:HOW([`Il numeratore è lo stesso: si prendono ${n} pezzi.`,`Pezzi da ${fr(1,d1)} sono più grandi di pezzi da ${fr(1,d2)}.`,`Quindi ${fr(n,d1)} è più grande.`],[`البسط هو هو: كناخدو ${n} طراف.`,`طراف ديال ${fr(1,d1)} كبار من طراف ديال ${fr(1,d2)}.`,`إذن ${fr(n,d1)} هو الكبير.`])}},
+()=>{const [[a,b],[c,d]]=pick([[[2,3],[3,5]],[[3,4],[5,7]],[[2,5],[1,3]],[[5,8],[3,5]],[[4,5],[3,4]]]);const D=b*d,big=a*d>c*b;
+  const w=B(`Prova a portarle allo stesso denominatore, ${D}.`,`جرّب ترجعهم لنفس المقام، ${D}.`);return {type:"mc",
+  q:B("Quale frazione è più grande?","أشمن كسر هو الكبير؟"),
+  opts:[[fr(a,b),big?1:0,big?"":w],[fr(c,d),big?0:1,big?w:""]],
+  help:B("Prova a confrontare tutte e due le frazioni con 1/2, oppure portale allo stesso denominatore.","جرّب تقارن بجوج الكسور مع 1/2، ولا رجعهم لنفس المقام."),
+  ex:HOW([`Porto le frazioni allo stesso denominatore: ${b} × ${d} = ${D}.`,`${fr(a,b)} = ${fr(a*d,D)} e ${fr(c,d)} = ${fr(c*b,D)}.`,`Confronto i numeratori: ${Math.max(a*d,c*b)} è il più grande.`],[`كنرجعو الكسور لنفس المقام: ${b} × ${d} = ${D}.`,`${fr(a,b)} = ${fr(a*d,D)} و ${fr(c,d)} = ${fr(c*b,D)}.`,`كنقارنو البسوط: ${Math.max(a*d,c*b)} هو الكبير.`])}},
+()=>{const [n,d,v]=pick([[2,4,[1,2]],[6,8,[3,4]],[2,8,[1,4]],[4,8,[1,2]]]);const k=v[0]*8/v[1];return {type:"line",max:1,sub:8,target:v,
+  q:B(`La retta è divisa in ottavi. Tocca il punto ${fr(n,d)}.`,`المستقيم مقسوم على 8 (ottavi). ضغط على النقطة ${fr(n,d)}.`),
+  help:B("Trasforma la frazione in ottavi: moltiplica sopra e sotto finché sotto c'è 8.","رجع الكسر ل ثُمُن: ضرب لفوق ولتحت حتى يولّي لتحت 8."),
+  ex:HOW([`La retta è divisa in 8 tratti: ogni tratto vale ${fr(1,8)}.`,`${fr(n,d)} = ${fr(k,8)}.`,`Conto ${k} tratti da 0.`],[`المستقيم مقسوم على 8: كل طرف كيسوى ${fr(1,8)}.`,`${fr(n,d)} = ${fr(k,8)}.`,`كنحسبو ${k} طراف من 0.`])}},
+()=>{const [n,d,dd]=pick([[1,2,8],[3,4,8],[2,3,6],[1,3,9],[2,5,10]]);const g=dd/d,k=n*g;return {type:"shade",shape:"bar",d:dd,target:[n,d],
+  q:B(`La vela è divisa in ${dd} parti. Colorane ${fr(n,d)}.`,`الشراع مقسوم على ${dd} طراف. لوّن ${fr(n,d)} منو.`),
+  help:B(`Raggruppa le ${dd} parti della vela in ${d} gruppi uguali: quante parti ci sono in ogni gruppo?`,`جمع ${dd} طراف ديال الشراع ف ${d} مجموعات متساويين: شحال من طرف فكل مجموعة؟`),
+  ex:HOW([`${dd} parti divise in ${d} gruppi: ogni gruppo ha ${g} parti.`,`${fr(n,d)} vuol dire ${n} ${n===1?"gruppo":"gruppi"}: ${n} × ${g} = ${k} parti.`,`${fr(n,d)} = ${fr(k,dd)}.`],[`${dd} طراف مقسومين على ${d} مجموعات: كل مجموعة فيها ${g}.`,`${fr(n,d)} كتعني ${n} مجموعات: ${n} × ${g} = ${k} طراف.`,`${fr(n,d)} = ${fr(k,dd)}.`])}},
+()=>({type:"match",q:B("Abbina le frazioni equivalenti.","ربط الكسور المكافئة."),
+  pairs:[[fr(1,2),fr(4,8)],[fr(2,3),fr(6,9)],[fr(3,5),fr(9,15)]],
+  help:B("Per ogni frazione a sinistra cerca per quale numero sono stati moltiplicati sopra e sotto.","لكل كسر على اليسار، قلّب فشحال تضرب لفوق ولتحت."),
+  ex:HOW([`1/2 × 4 sopra e sotto = 4/8.`,`2/3 × 3 sopra e sotto = 6/9.`,`3/5 × 3 sopra e sotto = 9/15.`],[`1/2 × 4 لفوق ولتحت = 4/8.`,`2/3 × 3 لفوق ولتحت = 6/9.`,`3/5 × 3 لفوق ولتحت = 9/15.`])}),
+()=>({type:"err",q:B(`Luca semplifica ${fr(6,8)}. In quale passaggio sbaglia?`,`لوكا كيبسّط ${fr(6,8)}. فأشمن خطوة غلط؟`),
+  steps:[B("Cerco un divisore comune di 6 e 8: il 2.","كنقلّب على قاسم مشترك بين 6 و 8: هو 2."),B("Divido il numeratore per 2: 6 : 2 = 3.","كنقسم البسط على 2: 6 : 2 = 3."),B("Divido il denominatore per 4: 8 : 4 = 2.","كنقسم المقام على 4: 8 : 4 = 2."),B(`Quindi ${fr(6,8)} = ${fr(3,2)}.`,`إذن ${fr(6,8)} = ${fr(3,2)}.`)],wrong:2,
+  help:B("Quando si semplifica, sopra e sotto si dividono per lo stesso numero. Controlla ogni passaggio.","فالتبسيط، لفوق ولتحت كيتقسمو على نفس الرقم. راجع كل خطوة."),
+  ex:HOW([`Il divisore comune è 2.`,`Sopra: 6 : 2 = 3. Sotto va diviso per lo stesso numero: 8 : 2 = 4.`,`${fr(6,8)} = ${fr(3,4)}.`],[`القاسم المشترك هو 2.`,`لفوق: 6 : 2 = 3. لتحت خاصو يتقسم على نفس الرقم: 8 : 2 = 4.`,`${fr(6,8)} = ${fr(3,4)}.`])}),
+()=>{const s=pick([[[1,3],[1,2],[3,4]],[[1,4],[2,5],[2,3]],[[1,6],[1,2],[5,6]]]);const t=x=>fr(x[0],x[1]);return {type:"mc",one:true,
+  q:B("Quale sequenza è in ordine crescente?","أشمن ترتيب من الصغير للكبير (crescente)؟"),
+  opts:[[`<bdi>${t(s[0])} < ${t(s[1])} < ${t(s[2])}</bdi>`,1],[`<bdi>${t(s[1])} < ${t(s[0])} < ${t(s[2])}</bdi>`,0,B(`${t(s[0])} è la più piccola.`,`${t(s[0])} هو الصغير.`)],[`<bdi>${t(s[2])} < ${t(s[1])} < ${t(s[0])}</bdi>`,0,B("Questo è l'ordine decrescente.","هادا الترتيب من الكبير للصغير.")]],
+  help:B("Confronta ogni frazione con 1/2: sta sopra o sotto la metà?","قارن كل كسر مع 1/2: واش فوق النص ولا تحت؟"),
+  ex:HOW([`${t(s[0])} è meno della metà.`,`${t(s[1])} è vicina alla metà.`,`${t(s[2])} è più della metà. Ordine: ${t(s[0])} < ${t(s[1])} < ${t(s[2])}.`],[`${t(s[0])} قل من النص.`,`${t(s[1])} قريب من النص.`,`${t(s[2])} كثر من النص. الترتيب: <bdi>${t(s[0])} < ${t(s[1])} < ${t(s[2])}</bdi>.`])}},
+()=>({type:"mc",q:B(`Quale frazione sta tra ${fr(1,4)} e ${fr(3,4)}?`,`أشمن كسر كاين بين ${fr(1,4)} و ${fr(3,4)}؟`),
+  opts:[[fr(1,2),1],[fr(1,8),0,B("1/8 è meno di 1/4.","1/8 قل من 1/4.")],[fr(7,8),0,B("7/8 è più di 3/4.","7/8 كثر من 3/4.")],[fr(5,4),0,B("5/4 è più di un intero.","5/4 كثر من وحدة كاملة.")]],
+  help:B("Disegna una barra divisa in quattro parti: dove si trovano 1/4 e 3/4? Che cosa c'è in mezzo?","رسم شريط مقسوم على 4: فين كاين 1/4 و 3/4؟ شنو كاين فالوسط؟"),
+  ex:HOW([`In quarti: 1/4 e 3/4. In mezzo c'è 2/4.`,`${fr(2,4)} = ${fr(1,2)}.`,`Quindi ${fr(1,2)} sta tra ${fr(1,4)} e ${fr(3,4)}.`],[`بالرّبع: 1/4 و 3/4. فالوسط كاين 2/4.`,`${fr(2,4)} = ${fr(1,2)}.`,`إذن ${fr(1,2)} كاين بين ${fr(1,4)} و ${fr(3,4)}.`])}),
+()=>{const [n,d,a]=pick([[15,20,3],[12,16,3],[10,25,2],[18,27,2],[14,35,2]]);const k=n/a;return {type:"input",ans:[d*a/n,1],
+  q:B(`Completa: ${fr(n,d)} = ${fr(a,"?")}`,`كمّل: ${fr(n,d)} = ${fr(a,"?")}`),
+  traps:[[[d-(n-a),1],B("Hai tolto lo stesso numero sopra e sotto: per una frazione equivalente si divide per lo stesso numero.","نقصتي نفس الرقم لفوق ولتحت: باش يكون مكافئ خاصنا نقسمو على نفس الرقم.")]],
+  help:B("Il numeratore è stato diviso per un certo numero: dividi per lo stesso numero anche il denominatore.","البسط تقسم على شي رقم: قسم حتى المقام على نفس الرقم."),
+  ex:HOW([`Il numeratore passa da ${n} a ${a}: è stato diviso per ${k}.`,`Divido per ${k} anche il denominatore: ${d} : ${k} = ${d/k}.`,`${fr(n,d)} = ${fr(a,d/k)}.`],[`البسط تبدّل من ${n} ل ${a}: تقسم على ${k}.`,`كنقسمو حتى المقام على ${k}: ${d} : ${k} = ${d/k}.`,`${fr(n,d)} = ${fr(a,d/k)}.`])}},
+()=>({type:"mc",one:true,q:B(`«${fr(2,4)} e ${fr(4,8)} indicano la stessa quantità.» Vero o falso?`,`«${fr(2,4)} و ${fr(4,8)} كيعنيو نفس الكمية.» صحيح ولا غلط؟`),
+  opts:[[B("Vero: sono tutte e due uguali a metà","صحيح: بجوج كيساويو النص"),1],[B("Falso: 4/8 è più grande perché ha numeri più grandi","غلط: 4/8 كبر حيت فيه أرقام كبار"),0,B("Numeri più grandi non vuol dire quantità più grande: i pezzi sono più piccoli.","أرقام كبار ماشي معناها كمية كبيرة: الطراف صغار.")],[B("Falso: 2/4 è più grande perché ha meno parti","غلط: 2/4 كبر حيت فيه طراف قلال"),0,B("Ha meno parti, ma più grandi: la quantità è la stessa.","فيه طراف قلال ولكن كبار: الكمية هي هي.")]],
+  help:B("Disegna due barre uguali, una divisa in 4 parti e una in 8. Colora 2 parti nella prima e 4 nella seconda.","رسم جوج شرايط متساويين، واحد مقسوم على 4 وواحد على 8. لوّن 2 فالأول و 4 فالثاني."),
+  ex:HOW([`${fr(2,4)}: semplifico per 2 → ${fr(1,2)}.`,`${fr(4,8)}: semplifico per 4 → ${fr(1,2)}.`,`Sono uguali: tutte e due valgono metà.`],[`${fr(2,4)}: كنبسّطو على 2 ← ${fr(1,2)}.`,`${fr(4,8)}: كنبسّطو على 4 ← ${fr(1,2)}.`,`متساويين: بجوج كيساويو النص.`])}),
+()=>{const [n,d]=pick([[2,5],[3,4],[1,3]]);return {type:"mc",
+  q:B(`Quale frazione NON è equivalente a ${fr(n,d)}?`,`أشمن كسر ماشي مكافئ ل ${fr(n,d)}؟`),
+  opts:[[fr(n+2,d+2),1],[fr(2*n,2*d),0,B("Sopra e sotto × 2: è equivalente.","لفوق ولتحت × 2: مكافئ.")],[fr(3*n,3*d),0,B("Sopra e sotto × 3: è equivalente.","لفوق ولتحت × 3: مكافئ.")],[fr(4*n,4*d),0,B("Sopra e sotto × 4: è equivalente.","لفوق ولتحت × 4: مكافئ.")]],
+  help:B("Controlla, per ogni frazione, se sopra e sotto sono stati moltiplicati per lo stesso numero.","شوف لكل كسر واش لفوق ولتحت تضربو فنفس الرقم."),
+  ex:HOW([`${fr(2*n,2*d)}, ${fr(3*n,3*d)}, ${fr(4*n,4*d)}: sopra e sotto moltiplicati per lo stesso numero.`,`${fr(n+2,d+2)}: sopra e sotto è stato aggiunto 2.`,`Aggiungere non dà una frazione equivalente.`],[`${fr(2*n,2*d)}، ${fr(3*n,3*d)}، ${fr(4*n,4*d)}: لفوق ولتحت تضربو فنفس الرقم.`,`${fr(n+2,d+2)}: تزاد 2 لفوق ولتحت.`,`الزيادة ما كتعطيش كسر مكافئ.`])}},
+()=>{const [a,b,d]=pick([[1,3,6],[1,4,12],[2,5,10],[3,4,8]]);const m=d/b;return {type:"input",ans:[a*m,1],
+  q:B(`Completa: ${fr("?",d)} = ${fr(a,b)}`,`كمّل: ${fr("?",d)} = ${fr(a,b)}`),
+  traps:[[[a+(d-b),1],B("Hai aggiunto lo stesso numero sopra e sotto: per una frazione equivalente si moltiplica.","زدتي نفس الرقم لفوق ولتحت: باش يكون مكافئ خاصنا نضربو.")]],
+  help:B("Per quale numero devi moltiplicare il denominatore di destra per ottenere quello di sinistra?","فشحال خاصك تضرب المقام اللي على اليمين باش تلقى اللي على اليسار؟"),
+  ex:HOW([`Da ${b} a ${d}: ${b} × ${m} = ${d}.`,`Moltiplico per ${m} anche il numeratore: ${a} × ${m} = ${a*m}.`,`${fr(a*m,d)} = ${fr(a,b)}.`],[`من ${b} ل ${d}: ${b} × ${m} = ${d}.`,`كنضربو حتى البسط ف ${m}: ${a} × ${m} = ${a*m}.`,`${fr(a*m,d)} = ${fr(a,b)}.`])}},
+()=>{const [[a,b],[c,d]]=pick([[[7,8],[3,4]],[[5,6],[2,3]],[[9,10],[4,5]]]);return {type:"mc",
+  q:B("Quale frazione è più vicina a 1?","أشمن كسر قريب ل 1؟"),
+  opts:[[fr(a,b),1],[fr(c,d),0,B(`A ${fr(c,d)} manca ${fr(d-c,d)} per arrivare a 1, a ${fr(a,b)} manca solo ${fr(b-a,b)}.`,`${fr(c,d)} ناقصو ${fr(d-c,d)} باش يوصل ل 1، و ${fr(a,b)} ناقصو غير ${fr(b-a,b)}.`)]],
+  help:B("Guarda quanto manca a ogni frazione per arrivare a 1: chi ha il pezzo mancante più piccolo?","شوف شحال ناقص لكل كسر باش يوصل ل 1: شكون عندو الطرف الناقص الصغير؟"),
+  ex:HOW([`A ${fr(a,b)} manca ${fr(b-a,b)} per fare 1.`,`A ${fr(c,d)} manca ${fr(d-c,d)}.`,`${fr(b-a,b)} è più piccolo di ${fr(d-c,d)}: ${fr(a,b)} è più vicina a 1.`],[`${fr(a,b)} ناقصو ${fr(b-a,b)} باش يولّي 1.`,`${fr(c,d)} ناقصو ${fr(d-c,d)}.`,`${fr(b-a,b)} صغر من ${fr(d-c,d)}: ${fr(a,b)} قريب ل 1.`])}},
+()=>({type:"mc",q:B("Quale frazione è più vicina a zero?","أشمن كسر قريب للصفر؟"),
+  opts:[[fr(1,10),1],[fr(1,2),0,B("1/2 è a metà strada.","1/2 فالنص ديال الطريق.")],[fr(1,3),0,B("1/3 è più grande di 1/10.","1/3 كبر من 1/10.")],[fr(1,5),0,B("1/5 è il doppio di 1/10.","1/5 هو الضعف ديال 1/10.")]],
+  help:B("Con il numeratore 1, la frazione più piccola è quella con i pezzi più piccoli.","ملي البسط هو 1، الكسر الصغير هو اللي عندو أصغر طراف."),
+  ex:HOW(["Tutte hanno numeratore 1: si prende un pezzo.","Il pezzo più piccolo è quello con il denominatore più grande: 10.","1/10 è la più vicina a zero."],["كلهم البسط ديالهم 1: كناخدو طرف واحد.","أصغر طرف هو اللي عندو أكبر مقام: 10.","1/10 هو الأقرب للصفر."])}),
+()=>{const p=pick([[[5,7],[6,9],[4,10],[8,12]],[[3,8],[6,8],[5,10],[4,6]],[[7,9],[3,9],[2,4],[6,15]]]);return {type:"mc",
+  q:B("Quale frazione è già ridotta ai minimi termini?","أشمن كسر مبسّط حتى لآخر؟"),
+  opts:[[fr(...p[0]),1],[fr(...p[1]),0,B(`Si può dividere per ${gcd(...p[1])}.`,`ممكن نقسموه على ${gcd(...p[1])}.`)],[fr(...p[2]),0,B(`Si può dividere per ${gcd(...p[2])}.`,`ممكن نقسموه على ${gcd(...p[2])}.`)],[fr(...p[3]),0,B(`Si può dividere per ${gcd(...p[3])}.`,`ممكن نقسموه على ${gcd(...p[3])}.`)]],
+  help:B("Per ogni frazione cerca un numero che divida sopra e sotto. Quella per cui non lo trovi è già ridotta.","لكل كسر قلّب على رقم كيقسم لفوق ولتحت. اللي ما لقيتيش ليه هو المبسّط."),
+  ex:HOW([`${fr(...p[1])}, ${fr(...p[2])}, ${fr(...p[3])}: hanno un divisore comune.`,`${p[0][0]} e ${p[0][1]} non hanno divisori comuni (oltre a 1).`,`${fr(...p[0])} è già ridotta.`],[`${fr(...p[1])}، ${fr(...p[2])}، ${fr(...p[3])}: عندهم قاسم مشترك.`,`${p[0][0]} و ${p[0][1]} ما عندهمش قاسم مشترك (من غير 1).`,`${fr(...p[0])} مبسّط.`])}},
+()=>{const n=pick([5,6,7]);return {type:"line",max:2,sub:4,target:[n,4],
+  q:B(`La retta va da 0 a 2 ed è divisa in quarti. Tocca il punto ${fr(n,4)}.`,`المستقيم من 0 ل 2 ومقسوم على الرّبع. ضغط على النقطة ${fr(n,4)}.`),
+  help:B("Ogni intero è diviso in 4 tratti. Arrivato a 1 hai già 4/4: quanti quarti devi aggiungere?","كل وحدة مقسومة على 4. ملي توصل ل 1 عندك 4/4: شحال من ربع خاصك تزيد؟"),
+  ex:HOW([`Ogni tratto vale ${fr(1,4)}. A 1 ci sono ${fr(4,4)}.`,`${fr(n,4)} = ${fr(4,4)} + ${fr(n-4,4)}.`,`Dopo l'1 conto ancora ${n-4} ${n-4===1?"tratto":"tratti"}.`],[`كل طرف كيسوى ${fr(1,4)}. ف 1 كاين ${fr(4,4)}.`,`${fr(n,4)} = ${fr(4,4)} + ${fr(n-4,4)}.`,`من بعد 1 كنحسبو ${n-4} طراف.`])}},
+];
+
+/* ===================== TAPPA 3 · Il Passo delle Nevi ===================== */
+const L3=[
+()=>{const d=R(5,11),a=R(1,d-3),b=R(1,d-1-a);return {type:"input",ans:[a+b,d],
+  q:B(`Calcola: ${fr(a,d)} + ${fr(b,d)}`,`حسب: ${fr(a,d)} + ${fr(b,d)}`),
+  traps:[[[a+b,2*d],B("Il denominatore non si somma: i pezzi restano della stessa grandezza.","المقام ما كيتجمعش: الطراف كيبقاو بنفس الكبر.")]],
+  help:B("Il denominatore indica il tipo di pezzi e resta uguale. Somma soltanto il numero di pezzi.","المقام كيبيّن نوع الطراف وكيبقى هو هو. جمع غير عدد الطراف."),
+  ex:HOW([`I denominatori sono uguali (${d}): i pezzi sono della stessa grandezza.`,`Sommo i numeratori: ${a} + ${b} = ${a+b}.`,`Il denominatore resta ${d}: ${fr(a+b,d)}.`],[`المقامات متساويين (${d}): الطراف بنفس الكبر.`,`كنجمعو البسوط: ${a} + ${b} = ${a+b}.`,`المقام كيبقى ${d}: ${fr(a+b,d)}.`])}},
+()=>{const d=R(5,11),a=R(3,d-1),b=R(1,a-1);return {type:"input",ans:[a-b,d],
+  q:B(`Calcola: ${fr(a,d)} − ${fr(b,d)}`,`حسب: ${fr(a,d)} − ${fr(b,d)}`),
+  traps:[[[a+b,d],B("Hai sommato invece di sottrarre.","جمعتي بلاصة ما تنقص.")]],
+  help:B("Il denominatore indica il tipo di pezzi e resta uguale. Togli soltanto il numero di pezzi.","المقام كيبيّن نوع الطراف وكيبقى هو هو. نقص غير عدد الطراف."),
+  ex:HOW([`I denominatori sono uguali (${d}).`,`Sottraggo i numeratori: ${a} − ${b} = ${a-b}.`,`Il risultato è ${fr(a-b,d)}.`],[`المقامات متساويين (${d}).`,`كننقصو البسوط: ${a} − ${b} = ${a-b}.`,`النتيجة هي ${fr(a-b,d)}.`])}},
+()=>{const [[a,b],[c,d]]=pick([[[1,2],[1,3]],[[1,3],[1,4]],[[1,2],[1,5]],[[2,3],[1,4]],[[1,4],[1,6]]]);const D=lcm(b,d),A=a*D/b,C=c*D/d,N=A+C;return {type:"input",ans:[N,D],
+  q:B(`Calcola: ${fr(a,b)} + ${fr(c,d)}`,`حسب: ${fr(a,b)} + ${fr(c,d)}`),
+  traps:[[[a+c,b+d],B("Hai sommato anche i denominatori: prima bisogna portare le frazioni allo stesso denominatore.","جمعتي حتى المقامات: خاصنا الأول نرجعو الكسور لنفس المقام.")],[[a+c,D],B("Il denominatore comune è giusto, ma i numeratori vanno trasformati prima di sommarli.","المقام المشترك صحيح، ولكن البسوط خاصهم يتبدّلو قبل ما نجمعوهم.")]],
+  help:B("Prima trasforma le frazioni in modo che abbiano lo stesso denominatore. Poi somma i numeratori.","الأول بدّل الكسور باش يكون عندهم نفس المقام. من بعد جمع البسوط."),
+  ex:HOW([`I denominatori sono diversi (${b} e ${d}): il denominatore comune è ${D}.`,`Trasformo: ${fr(a,b)} = ${fr(A,D)}, ${fr(c,d)} = ${fr(C,D)}.`,`Sommo i numeratori: ${A} + ${C} = ${N}. Risultato: ${frR(N,D)}.`],[`المقامات مختلفين (${b} و ${d}): المقام المشترك هو ${D}.`,`كنبدّلو: ${fr(a,b)} = ${fr(A,D)}، ${fr(c,d)} = ${fr(C,D)}.`,`كنجمعو البسوط: ${A} + ${C} = ${N}. النتيجة: ${frR(N,D)}.`])}},
+()=>({type:"mc",q:B(`Quanto fa ${fr(1,2)} + ${fr(1,4)}?`,`شحال كيعطي ${fr(1,2)} + ${fr(1,4)}؟`),
+  opts:[[fr(3,4),1],[fr(2,6),0,B("I denominatori non si sommano.","المقامات ما كيتجمعوش.")],[fr(2,4),0,B("Prima trasforma 1/2 in quarti: 1/2 = 2/4.","الأول رجع 1/2 ل الرّبع: 1/2 = 2/4.")],[fr(1,6),0,B("Non si sommano i denominatori.","ما كنجمعوش المقامات.")]],
+  help:B("Quanti quarti ci sono in mezzo?","شحال من ربع كاين فالنص؟"),
+  ex:HOW([`Denominatore comune: 4.`,`${fr(1,2)} = ${fr(2,4)}.`,`${fr(2,4)} + ${fr(1,4)} = ${fr(3,4)}.`],[`المقام المشترك: 4.`,`${fr(1,2)} = ${fr(2,4)}.`,`${fr(2,4)} + ${fr(1,4)} = ${fr(3,4)}.`])}),
+()=>{const [[a,b],[c,d]]=pick([[[3,4],[1,2]],[[5,6],[1,3]],[[2,3],[1,4]],[[7,8],[1,2]]]);const D=lcm(b,d),A=a*D/b,C=c*D/d,N=A-C;return {type:"input",ans:[N,D],
+  q:B(`Calcola: ${fr(a,b)} − ${fr(c,d)}`,`حسب: ${fr(a,b)} − ${fr(c,d)}`),
+  traps:[[[a-c,b-d],B("Hai sottratto anche i denominatori: prima porta le frazioni allo stesso denominatore.","نقصتي حتى المقامات: الأول رجع الكسور لنفس المقام.")]],
+  help:B("Prima porta le due frazioni allo stesso denominatore, poi sottrai i numeratori.","الأول رجع بجوج الكسور لنفس المقام، من بعد نقص البسوط."),
+  ex:HOW([`Denominatore comune: ${D}.`,`${fr(a,b)} = ${fr(A,D)}, ${fr(c,d)} = ${fr(C,D)}.`,`${A} − ${C} = ${N}. Risultato: ${frR(N,D)}.`],[`المقام المشترك: ${D}.`,`${fr(a,b)} = ${fr(A,D)}، ${fr(c,d)} = ${fr(C,D)}.`,`${A} − ${C} = ${N}. النتيجة: ${frR(N,D)}.`])}},
+()=>{const [n,d,t]=pick([[2,3,18],[3,4,20],[2,5,35],[5,6,24],[3,8,40]]);const one=t/d,res=one*n;return {type:"input",ans:[res,1],
+  q:B(`Quanto fa ${fr(n,d)} di ${t}?`,`شحال كيعطي ${fr(n,d)} من ${t}؟`),
+  traps:[[[one,1],B("Hai trovato una sola parte: ora moltiplica per il numeratore.","لقيتي غير طرف واحد: دابا ضرب فالبسط.")],[[t*d/n,1],B("Hai diviso e moltiplicato al contrario: si divide per il denominatore.","قسمتي وضربتي بالمقلوب: كنقسمو على المقام.")]],
+  help:B("Prima dividi per il denominatore, poi moltiplica per il numeratore.","الأول قسم على المقام، من بعد ضرب فالبسط."),
+  ex:HOW([`Divido per il denominatore: ${t} : ${d} = ${one} (questo è ${fr(1,d)}).`,`Moltiplico per il numeratore: ${one} × ${n} = ${res}.`,`${fr(n,d)} di ${t} = ${res}.`],[`كنقسمو على المقام: ${t} : ${d} = ${one} (هادا هو ${fr(1,d)}).`,`كنضربو فالبسط: ${one} × ${n} = ${res}.`,`${fr(n,d)} من ${t} = ${res}.`])}},
+()=>{const t=pick([40,48,32]);return {type:"input",ans:[t*3/8,1],
+  q:B(`Una funivia porta ${t} escursionisti. Al primo rifugio scendono i ${fr(3,8)}. Quanti escursionisti scendono?`,`التيليفيريك هازّ ${t} ديال المتجوّلين. فأول ملجأ كينزلو ${fr(3,8)} منهم. شحال من واحد نزل؟`),
+  traps:[[[t/8,1],B("Questo è un ottavo degli escursionisti: ne scendono i 3/8.","هادا هو الثُّمُن: اللي نزلو هوما 3/8.")]],
+  help:B("Prima trova quanti sono 1/8 degli escursionisti, poi prendine 3 volte tanto.","الأول لقى شحال هو 1/8 ديال المتجوّلين، من بعد خود 3 ديال المرات."),
+  ex:HOW([`1/8 di ${t}: ${t} : 8 = ${t/8}.`,`3/8: ${t/8} × 3 = ${t*3/8}.`,`Scendono ${t*3/8} escursionisti.`],[`1/8 من ${t}: ${t} : 8 = ${t/8}.`,`3/8: ${t/8} × 3 = ${t*3/8}.`,`نزلو ${t*3/8} ديال المتجوّلين.`])}},
+()=>{const d=pick([5,7,9]),k=R(1,d-1);return {type:"input",ans:[d-k,d],
+  q:B(`Avete percorso ${fr(k,d)} del sentiero. Che frazione manca?`,`مشيتو ${fr(k,d)} من الطريق. شنو هو الكسر اللي باقي؟`),
+  traps:[[[k,d],B("Questa è la parte già percorsa, non quella che manca.","هادي هي اللي مشيتو، ماشي اللي باقية.")]],
+  help:B("Il sentiero intero è 1, cioè tante parti quante dice il denominatore. Quante ne mancano?","الطريق كاملة هي 1، يعني عدد الطراف اللي كيقول المقام. شحال باقي؟"),
+  ex:HOW([`Il sentiero intero è 1 = ${fr(d,d)}.`,`${fr(d,d)} − ${fr(k,d)}: ${d} − ${k} = ${d-k}.`,`Manca ${fr(d-k,d)}.`],[`الطريق كاملة هي 1 = ${fr(d,d)}.`,`${fr(d,d)} − ${fr(k,d)}: ${d} − ${k} = ${d-k}.`,`باقي ${fr(d-k,d)}.`])}},
+()=>({type:"err",q:B(`Anna calcola ${fr(1,3)} + ${fr(1,4)}. In quale passaggio sbaglia?`,`آنا كتحسب ${fr(1,3)} + ${fr(1,4)}. فأشمن خطوة غلطات؟`),
+  steps:[B("Le due frazioni hanno denominatori diversi.","بجوج الكسور عندهم مقامات مختلفين."),B("Le sommo così come sono: numeratori con numeratori, denominatori con denominatori.","كنجمعهم كيف ما هوما: البسوط مع البسوط، والمقامات مع المقامات."),B("1 + 1 = 2 e 3 + 4 = 7.","1 + 1 = 2 و 3 + 4 = 7."),B(`Risultato: ${fr(2,7)}.`,`النتيجة: ${fr(2,7)}.`)],wrong:1,
+  help:B("Si possono sommare i numeratori solo quando i pezzi hanno la stessa grandezza. Dove non succede?","ما نجمعو البسوط غير إلا كانو الطراف بنفس الكبر. فين ما كانش هادشي؟"),
+  ex:HOW([`Denominatori diversi: prima trovo il denominatore comune, 12.`,`${fr(1,3)} = ${fr(4,12)}, ${fr(1,4)} = ${fr(3,12)}.`,`${fr(4,12)} + ${fr(3,12)} = ${fr(7,12)}.`],[`مقامات مختلفين: الأول كنلقاو المقام المشترك، 12.`,`${fr(1,3)} = ${fr(4,12)}، ${fr(1,4)} = ${fr(3,12)}.`,`${fr(4,12)} + ${fr(3,12)} = ${fr(7,12)}.`])}),
+()=>({type:"match",q:B("Abbina ogni somma al risultato.","ربط كل جمع مع النتيجة ديالو."),
+  pairs:[[`<bdi>${fr(1,2)} + ${fr(1,2)}</bdi>`,"1"],[`<bdi>${fr(1,4)} + ${fr(1,4)}</bdi>`,fr(1,2)],[`<bdi>${fr(1,3)} + ${fr(1,3)}</bdi>`,fr(2,3)]],
+  help:B("Somma i numeratori, tieni il denominatore, poi semplifica se puoi.","جمع البسوط، خلّي المقام، ومن بعد بسّط إلا قدرتي."),
+  ex:HOW([`1/2 + 1/2 = 2/2 = 1.`,`1/4 + 1/4 = 2/4 = 1/2.`,`1/3 + 1/3 = 2/3.`],[`1/2 + 1/2 = 2/2 = 1.`,`1/4 + 1/4 = 2/4 = 1/2.`,`1/3 + 1/3 = 2/3.`])}),
+()=>{const d=pick([8,6,10]);let k;do{k=R(1,d-2)}while(2*k===d);return {type:"mc",
+  q:B(`Quanto fa 1 − ${fr(k,d)}?`,`شحال كيعطي 1 − ${fr(k,d)}؟`),
+  opts:[[fr(d-k,d),1],[fr(k,d),0,B("Questa è la parte che togli, non quella che resta.","هادا هو اللي كتنقص، ماشي اللي كيبقى.")],[fr(d-k-1,d),0,B(`1 = ${fr(d,d)}: ${d} − ${k} = ${d-k}.`,`1 = ${fr(d,d)}: ${d} − ${k} = ${d-k}.`)]],
+  help:B("Scrivi 1 come frazione con lo stesso denominatore dell'altra.","كتب 1 بحال كسر بنفس المقام ديال الآخر."),
+  ex:HOW([`Scrivo 1 come ${fr(d,d)}.`,`${fr(d,d)} − ${fr(k,d)}: ${d} − ${k} = ${d-k}.`,`Risultato: ${fr(d-k,d)}.`],[`كنكتبو 1 بحال ${fr(d,d)}.`,`${fr(d,d)} − ${fr(k,d)}: ${d} − ${k} = ${d-k}.`,`النتيجة: ${fr(d-k,d)}.`])}},
+()=>({type:"input",ans:[1,1],q:B(`Calcola: ${fr(1,2)} + ${fr(1,4)} + ${fr(1,4)}`,`حسب: ${fr(1,2)} + ${fr(1,4)} + ${fr(1,4)}`),
+  help:B("Trasforma 1/2 in quarti, poi conta tutti i quarti.","رجع 1/2 ل الرّبع، من بعد حسب كاع الرّبع."),
+  ex:HOW([`${fr(1,2)} = ${fr(2,4)}.`,`${fr(2,4)} + ${fr(1,4)} + ${fr(1,4)} = ${fr(4,4)}.`,`${fr(4,4)} = 1.`],[`${fr(1,2)} = ${fr(2,4)}.`,`${fr(2,4)} + ${fr(1,4)} + ${fr(1,4)} = ${fr(4,4)}.`,`${fr(4,4)} = 1.`])}),
+()=>({type:"mc",q:B("Quale somma fa esattamente 1?","أشمن جمع كيعطي 1 بالضبط؟"),
+  opts:[[`<bdi>${fr(1,3)} + ${fr(2,3)}</bdi>`,1],[`<bdi>${fr(1,2)} + ${fr(1,3)}</bdi>`,0,B("Fa 5/6: manca un sesto.","كيعطي 5/6: ناقص سدس.")],[`<bdi>${fr(2,5)} + ${fr(2,5)}</bdi>`,0,B("Fa 4/5.","كيعطي 4/5.")],[`<bdi>${fr(3,4)} + ${fr(1,2)}</bdi>`,0,B("Fa 5/4: supera 1.","كيعطي 5/4: كيفوت 1.")]],
+  help:B("Una somma fa 1 quando il numeratore diventa uguale al denominatore.","الجمع كيعطي 1 ملي البسط كيولّي بحال المقام."),
+  ex:HOW([`${fr(1,3)} + ${fr(2,3)}: stesso denominatore.`,`1 + 2 = 3: ${fr(3,3)}.`,`${fr(3,3)} = 1.`],[`${fr(1,3)} + ${fr(2,3)}: نفس المقام.`,`1 + 2 = 3: ${fr(3,3)}.`,`${fr(3,3)} = 1.`])}),
+()=>{const [t,a,b]=pick([[24,8,6],[36,12,9],[48,16,12]]);return {type:"input",ans:[t-a-b,1],
+  q:B(`Una corda lunga ${t} metri: ne usate ${fr(1,3)} per la tenda e ${fr(1,4)} per lo zaino. Quanti metri restano?`,`حبل طولو ${t} متر: استعملتو ${fr(1,3)} للخيمة و ${fr(1,4)} للصاك. شحال من متر بقى؟`),
+  traps:[[[a+b,1],B("Questi sono i metri usati: la domanda chiede quelli che restano.","هادو هوما الميترات اللي استعملتو: السؤال على اللي بقاو.")]],
+  help:B("Calcola separatamente 1/3 e 1/4 della corda, poi togli tutti e due i pezzi dal totale.","حسب بوحدو 1/3 و 1/4 ديال الحبل، من بعد نقص بجوج الطراف من الطول الكامل."),
+  ex:HOW([`${fr(1,3)} di ${t}: ${t} : 3 = ${a} metri.`,`${fr(1,4)} di ${t}: ${t} : 4 = ${b} metri.`,`Restano ${t} − ${a} − ${b} = ${t-a-b} metri.`],[`${fr(1,3)} من ${t}: ${t} : 3 = ${a} متر.`,`${fr(1,4)} من ${t}: ${t} : 4 = ${b} متر.`,`بقاو ${t} − ${a} − ${b} = ${t-a-b} متر.`])}},
+()=>{const [a,b,m]=pick([[4,6,12],[3,4,12],[6,8,24],[2,5,10],[4,10,20]]);return {type:"input",ans:[m,1],
+  q:B(`Qual è il più piccolo denominatore comune per sommare ${fr(1,a)} e ${fr(1,b)}?`,`شنو هو أصغر مقام مشترك باش نجمعو ${fr(1,a)} و ${fr(1,b)}؟`),
+  traps:[[[a*b,1],B("Moltiplicare i due denominatori funziona, ma qui c'è un denominatore comune più piccolo.","ضرب المقامين كيخدم، ولكن هنا كاين مقام مشترك صغر.")]],
+  help:B("Elenca i multipli del numero più grande finché ne trovi uno che si divide anche per l'altro.","كتب المضاعفات ديال الرقم الكبير حتى تلقى واحد كيتقسم حتى على الآخر."),
+  ex:HOW([`Multipli di ${b}: ${b}, ${2*b}, ${3*b}, …`,`Il primo che si divide anche per ${a} è ${m}.`,`Il denominatore comune più piccolo è ${m}.`],[`المضاعفات ديال ${b}: ${b}، ${2*b}، ${3*b}، …`,`أول واحد كيتقسم حتى على ${a} هو ${m}.`,`أصغر مقام مشترك هو ${m}.`])}},
+()=>({type:"mc",q:B(`Quanto fa ${fr(5,6)} − ${fr(1,3)}?`,`شحال كيعطي ${fr(5,6)} − ${fr(1,3)}؟`),
+  opts:[[fr(1,2),1],[fr(4,6),0,B("Prima trasforma 1/3 in sesti: 1/3 = 2/6.","الأول رجع 1/3 ل السدس: 1/3 = 2/6.")],[fr(4,3),0,B("I denominatori non si sottraggono.","المقامات ما كيتنقصوش.")],[fr(1,3),0,B("5/6 − 2/6 = 3/6.","5/6 − 2/6 = 3/6.")]],
+  help:B("Quanti sesti ci sono in un terzo?","شحال من سدس كاين فالثلث؟"),
+  ex:HOW([`Denominatore comune: 6. ${fr(1,3)} = ${fr(2,6)}.`,`${fr(5,6)} − ${fr(2,6)} = ${fr(3,6)}.`,`Semplifico: ${fr(3,6)} = ${fr(1,2)}.`],[`المقام المشترك: 6. ${fr(1,3)} = ${fr(2,6)}.`,`${fr(5,6)} − ${fr(2,6)} = ${fr(3,6)}.`,`كنبسّطو: ${fr(3,6)} = ${fr(1,2)}.`])}),
+()=>{const [n,d,t]=pick([[3,4,20],[2,3,15],[3,5,25]]);const g=t*n/d;return {type:"input",ans:[t-g,1],
+  q:B(`Avete ${t} biscotti e ne regalate i ${fr(n,d)} a un pastore. Quanti biscotti vi restano?`,`عندكم ${t} ديال البيسكوي وعطيتو ${fr(n,d)} منهم لواحد الراعي. شحال بقى ليكم؟`),
+  traps:[[[g,1],B("Questi sono i biscotti regalati: quanti ve ne restano?","هادو هوما اللي عطيتو: شحال بقى ليكم؟")]],
+  help:B("Prima calcola quanti biscotti regalate, poi togli quel numero dal totale.","الأول حسب شحال عطيتو، من بعد نقصو من المجموع."),
+  ex:HOW([`${fr(n,d)} di ${t}: ${t} : ${d} = ${t/d}, × ${n} = ${g}.`,`Regalate ${g} biscotti.`,`Restano ${t} − ${g} = ${t-g}.`],[`${fr(n,d)} من ${t}: ${t} : ${d} = ${t/d}، × ${n} = ${g}.`,`عطيتو ${g} ديال البيسكوي.`,`بقاو ${t} − ${g} = ${t-g}.`])}},
+()=>{const [n,d,k]=pick([[1,5,6],[1,4,7],[1,3,9],[2,5,8]]);const one=k/n;return {type:"input",ans:[one*d,1],
+  q:B(`Al rifugio, ${fr(n,d)} delle capre corrisponde a ${k} capre. Quante capre ci sono in tutto?`,`فالملجأ، ${fr(n,d)} ديال المعز كيساوي ${k} ديال المعزات. شحال كاين ديال المعز فالمجموع؟`),
+  traps:[[[k*n/d,1],B("Hai calcolato la frazione di "+k+": qui invece "+k+" è già una parte del totale.","حسبتي الكسر ديال "+k+": هنا "+k+" هو أصلا طرف من المجموع.")]],
+  help:B("Il numero di capre dato corrisponde a una parte (o ad alcune parti): quanto vale una parte? E tutte le parti?","عدد المعز اللي معطي كيساوي طرف (ولا شي طراف): شحال كيسوى طرف واحد؟ وكاع الطراف؟"),
+  ex:HOW([...(n>1?[`${fr(n,d)} sono ${k} capre: una parte (${fr(1,d)}) è ${k} : ${n} = ${one}.`]:[`${fr(1,d)} sono ${k} capre: una parte vale ${k}.`]),`Tutte le parti sono ${d}: ${one} × ${d} = ${one*d}.`,`In tutto ci sono ${one*d} capre.`],[...(n>1?[`${fr(n,d)} هوما ${k} معزات: طرف واحد (${fr(1,d)}) هو ${k} : ${n} = ${one}.`]:[`${fr(1,d)} هوما ${k} معزات: طرف واحد كيسوى ${k}.`]),`كاع الطراف هوما ${d}: ${one} × ${d} = ${one*d}.`,`فالمجموع كاين ${one*d} معزة.`])}},
+()=>{const [n,d,t]=pick([[2,3,30],[3,4,40],[5,8,24]]);return {type:"mc",
+  q:B(`I ${fr(n,d)} di ${t} sono più o meno della metà di ${t}?`,`${fr(n,d)} من ${t} واش كثر ولا قل من النص ديال ${t}؟`),
+  opts:[[B("Più della metà","كثر من النص"),1],[B("Meno della metà","قل من النص"),0,B(`${fr(n,d)} è più di ${fr(1,2)}.`,`${fr(n,d)} كثر من ${fr(1,2)}.`)],[B("Esattamente la metà","النص بالضبط"),0,B(`La metà sarebbe ${fr(1,2)}.`,`النص هو ${fr(1,2)}.`)]],
+  help:B("Confronta la frazione con 1/2: è più grande o più piccola?","قارن الكسر مع 1/2: واش كبر ولا صغر؟"),
+  ex:HOW([`${fr(n,d)} di ${t} = ${t*n/d}.`,`La metà di ${t} è ${t/2}.`,`${t*n/d} > ${t/2}: è più della metà.`],[`${fr(n,d)} من ${t} = ${t*n/d}.`,`النص ديال ${t} هو ${t/2}.`,`${t*n/d} > ${t/2}: كثر من النص.`])}},
+()=>{const [qi,qa,t,s,steps]=pick([
+  [`${fr(1,4)} + ${fr(1,2)}`,`${fr(1,4)} + ${fr(1,2)}`,[3,4],4,[["1/2 = 2/4","1/4 + 2/4 = 3/4"],["1/2 = 2/4","1/4 + 2/4 = 3/4"]]],
+  [`${fr(1,3)} + ${fr(1,3)}`,`${fr(1,3)} + ${fr(1,3)}`,[2,3],3,[["1 + 1 = 2: 2/3"],["1 + 1 = 2: 2/3"]]],
+  [`${fr(3,4)} − ${fr(1,2)}`,`${fr(3,4)} − ${fr(1,2)}`,[1,4],4,[["1/2 = 2/4","3/4 − 2/4 = 1/4"],["1/2 = 2/4","3/4 − 2/4 = 1/4"]]]]);return {type:"line",max:1,sub:s,target:t,
+  q:B(`Tocca sulla retta il risultato di ${qi}.`,`ضغط على المستقيم فالنتيجة ديال <bdi>${qa}</bdi>.`),
+  help:B("Prima calcola l'operazione, poi conta i tratti sulla retta partendo da 0.","الأول دير العملية، من بعد حسب الطراف على المستقيم من 0."),
+  ex:HOW([...steps[0],`Conto ${t[0]} tratti da ${fr(1,s)} partendo da 0.`],[...steps[1],`كنحسبو ${t[0]} طراف ديال ${fr(1,s)} من 0.`])}},
+];
+
+/* ===================== TAPPA 4 · Il Deserto delle Dune ===================== */
+const L4=[
+()=>{const [[a,b],[c,d]]=pick([[[2,3],[3,5]],[[3,4],[2,9]],[[5,6],[3,10]],[[4,7],[7,8]]]);return {type:"input",ans:[a*c,b*d],
+  q:B(`Calcola: ${fr(a,b)} × ${fr(c,d)}`,`حسب: ${fr(a,b)} × ${fr(c,d)}`),
+  traps:[[[a*d,b*c],B("Hai capovolto la seconda frazione: si fa solo nella divisione.","قلبتي الكسر الثاني: هادشي كيتدار غير فالقسمة.")],[[a+c,b+d],B("Hai sommato invece di moltiplicare.","جمعتي بلاصة ما تضرب.")]],
+  help:B("Moltiplica i numeratori tra loro e i denominatori tra loro. Poi semplifica se puoi.","ضرب البسوط بيناتهم والمقامات بيناتهم. من بعد بسّط إلا قدرتي."),
+  ex:HOW([`Numeratori: ${a} × ${c} = ${a*c}.`,`Denominatori: ${b} × ${d} = ${b*d}.`,`${fr(a*c,b*d)}${gcd(a*c,b*d)>1?` = ${frR(a*c,b*d)} (semplificata)`:""}.`],[`البسوط: ${a} × ${c} = ${a*c}.`,`المقامات: ${b} × ${d} = ${b*d}.`,`${fr(a*c,b*d)}${gcd(a*c,b*d)>1?` = ${frR(a*c,b*d)} (مبسّط)`:""}.`])}},
+()=>{const [[a,b],[c,d]]=pick([[[3,4],[1,2]],[[2,5],[4,5]],[[5,6],[5,12]],[[1,3],[2,9]]]);return {type:"input",ans:[a*d,b*c],
+  q:B(`Calcola: ${fr(a,b)} : ${fr(c,d)}`,`حسب: ${fr(a,b)} : ${fr(c,d)}`),
+  traps:[[[a*c,b*d],B("Hai moltiplicato senza capovolgere la seconda frazione.","ضربتي بلا ما تقلب الكسر الثاني.")]],
+  help:B("Dividere per una frazione è come moltiplicare per la frazione capovolta.","القسمة على كسر بحال الضرب فالكسر المقلوب."),
+  ex:HOW([`Capovolgo la seconda frazione: ${fr(c,d)} diventa ${fr(d,c)}.`,`Moltiplico: ${fr(a,b)} × ${fr(d,c)} = ${fr(a*d,b*c)}.`,`Semplifico: ${frR(a*d,b*c)}.`],[`كنقلبو الكسر الثاني: ${fr(c,d)} كيولّي ${fr(d,c)}.`,`كنضربو: ${fr(a,b)} × ${fr(d,c)} = ${fr(a*d,b*c)}.`,`كنبسّطو: ${frR(a*d,b*c)}.`])}},
+()=>{const [n,d]=pick([[4,7],[2,9],[3,5],[5,8]]);return {type:"mc",
+  q:B(`Qual è l'inversa (o reciproca) di ${fr(n,d)}?`,`شنو هو المقلوب (inversa) ديال ${fr(n,d)}؟`),
+  opts:[[fr(d,n),1],[fr(n,d),0,B("È la stessa frazione.","هادا نفس الكسر.")],["1",0,B("Moltiplicata per la sua inversa dà 1, ma l'inversa non è 1.","إلا ضربناه فالمقلوب ديالو كيعطي 1، ولكن المقلوب ماشي 1.")],[fr(1,d),0,B("Si scambiano numeratore e denominatore.","كنبدّلو البسط والمقام.")]],
+  help:B("L'inversa si ottiene capovolgendo la frazione.","المقلوب كنلقاوه إلا قلبنا الكسر."),
+  ex:HOW([`Scambio numeratore e denominatore di ${fr(n,d)}.`,`L'inversa è ${fr(d,n)}.`,`Controllo: ${fr(n,d)} × ${fr(d,n)} = 1.`],[`كنبدّلو البسط والمقام ديال ${fr(n,d)}.`,`المقلوب هو ${fr(d,n)}.`,`كنتأكدو: ${fr(n,d)} × ${fr(d,n)} = 1.`])}},
+()=>{const [n,d]=pick([[5,2],[7,3],[9,4],[11,5]]);const w=Math.floor(n/d),r=n%d;return {type:"mc",
+  q:B(`Come si scrive ${fr(n,d)} come numero misto?`,`كيفاش كيتكتب ${fr(n,d)} بحال عدد كسري (numero misto)؟`),
+  opts:[[B(mixed(w,r,d),mixedA(w,r,d)),1],[B(mixed(r,w,d),mixedA(r,w,d)),0,B("Parte intera e numeratore sono scambiati.","الجزء الصحيح والبسط تبدّلو.")],[B(mixed(w+1,r,d),mixedA(w+1,r,d)),0,B(`${d} × ${w+1} supera ${n}.`,`${d} × ${w+1} كيفوت ${n}.`)]],
+  help:B("Dividi il numeratore per il denominatore: il quoziente sono gli interi, il resto i pezzi che avanzano.","قسم البسط على المقام: الخارج هو الوحدات، والباقي هو الطراف اللي فضلو."),
+  ex:HOW([`${n} : ${d} = ${w} con resto ${r}.`,`${w} interi e ${r} ${r===1?"pezzo":"pezzi"} da ${fr(1,d)}.`,`${fr(n,d)} = ${mixed(w,r,d)}.`],[`${n} : ${d} = ${w} والباقي ${r}.`,`${w} وحدات و ${r} طراف ديال ${fr(1,d)}.`,`${fr(n,d)} = ${mixedA(w,r,d)}.`])}},
+()=>{const [w,n,d]=pick([[2,1,3],[1,3,4],[3,1,2],[2,2,5]]);return {type:"input",ans:[w*d+n,d],
+  q:B(`Scrivi ${mixed(w,n,d)} come frazione.`,`كتب ${mixedA(w,n,d)} بحال كسر.`),
+  traps:[[[w+n,d],B(`Ogni intero vale ${d} pezzi: prima moltiplica gli interi per ${d}, poi aggiungi i pezzi.`,`كل وحدة فيها ${d} طراف: الأول ضرب الوحدات ف ${d}، من بعد زيد الطراف.`)]],
+  help:B("Quanti pezzi ci sono in ogni intero? Moltiplica per il numero di interi e aggiungi i pezzi in più.","شحال من طرف كاين فكل وحدة؟ ضرب فعدد الوحدات وزيد الطراف اللي زايدين."),
+  ex:HOW([`Ogni intero vale ${d} pezzi: ${w} × ${d} = ${w*d}.`,`Aggiungo i ${n} pezzi: ${w*d} + ${n} = ${w*d+n}.`,`${mixed(w,n,d)} = ${fr(w*d+n,d)}.`],[`كل وحدة فيها ${d} طراف: ${w} × ${d} = ${w*d}.`,`كنزيدو ${n} طراف: ${w*d} + ${n} = ${w*d+n}.`,`${mixedA(w,n,d)} = ${fr(w*d+n,d)}.`])}},
+()=>{const d=pick([2,3]);return {type:"mc",
+  q:B(`Quanto fa ${fr(1,d)} × ${fr(1,d)}?`,`شحال كيعطي ${fr(1,d)} × ${fr(1,d)}؟`),
+  opts:[[fr(1,d*d),1],[fr(2,d),0,B("Stai sommando, non moltiplicando.","راك كتجمع، ماشي كتضرب.")],[fr(1,d),0,B("Moltiplicando per una frazione minore di 1 il risultato diventa più piccolo.","إلا ضربنا فكسر صغر من 1 النتيجة كتصغر.")],["1",0,B("1 lo dà il prodotto di una frazione per la sua inversa.","1 كيجي من ضرب كسر فالمقلوب ديالو.")]],
+  help:B(`«Per ${d===2?"1/2":"1/3"}» vuol dire «${d===2?"la metà":"un terzo"} di». Quanto è ${d===2?"la metà di mezzo":"un terzo di un terzo"}?`,`«ضرب ف ${d===2?"1/2":"1/3"}» كتعني «${d===2?"النص":"الثلث"} ديال». شحال هو ${d===2?"النص ديال النص":"الثلث ديال الثلث"}؟`),
+  ex:HOW([`Numeratori: 1 × 1 = 1.`,`Denominatori: ${d} × ${d} = ${d*d}.`,`${fr(1,d)} × ${fr(1,d)} = ${fr(1,d*d)}: più piccolo di ${fr(1,d)}.`],[`البسوط: 1 × 1 = 1.`,`المقامات: ${d} × ${d} = ${d*d}.`,`${fr(1,d)} × ${fr(1,d)} = ${fr(1,d*d)}: صغر من ${fr(1,d)}.`])}},
+()=>({type:"mc",one:true,q:B(`«Se moltiplico 12 per ${fr(1,2)} ottengo un numero più grande di 12.» Vero o falso?`,`«إلا ضربت 12 ف ${fr(1,2)} كنلقى رقم كبر من 12.» صحيح ولا غلط؟`),
+  opts:[[B("Falso: moltiplicare per una frazione minore di 1 rimpicciolisce","غلط: الضرب فكسر صغر من 1 كيصغّر"),1],[B("Vero: moltiplicare fa sempre crescere","صحيح: الضرب ديما كيكبّر"),0,B("Vale solo per numeri maggiori di 1: 12 × 1/2 = 6.","هادشي صحيح غير مع أرقام كبر من 1: 12 × 1/2 = 6.")],[B("Vero: il risultato è 24","صحيح: النتيجة هي 24"),0,B("24 è 12 : 1/2, non 12 × 1/2.","24 هي 12 : 1/2، ماشي 12 × 1/2.")]],
+  help:B("Prendere 1/2 di qualcosa vuol dire prenderne la metà.","ناخدو 1/2 ديال شي حاجة كتعني ناخدو النص ديالها."),
+  ex:HOW([`12 × ${fr(1,2)} vuol dire «la metà di 12».`,`12 : 2 = 6.`,`6 è più piccolo di 12: l'affermazione è falsa.`],[`12 × ${fr(1,2)} كتعني «النص ديال 12».`,`12 : 2 = 6.`,`6 صغر من 12: الجملة غلط.`])}),
+()=>{const [n,d]=pick([[3,2],[4,3],[5,2]]);return {type:"mc",
+  q:B(`Quanto fa ${n} : ${fr(1,d)}?`,`شحال كيعطي ${n} : ${fr(1,d)}؟`),
+  opts:[[String(n*d),1],[fr(n,d),0,B(`Questo è ${n} × ${fr(1,d)}, non la divisione.`,`هادا هو ${n} × ${fr(1,d)}، ماشي القسمة.`)],[fr(1,n*d),0,B(`Dividere per ${fr(1,d)} vuol dire contare quanti pezzi da ${fr(1,d)} ci stanno.`,`القسمة على ${fr(1,d)} كتعني نحسبو شحال من طرف ديال ${fr(1,d)} كيدخل.`)]],
+  help:B(`Quanti pezzi da ${fr(1,d)} entrano in un intero? E in ${n} interi?`,`شحال من طرف ديال ${fr(1,d)} كيدخل فوحدة؟ وف ${n} وحدات؟`),
+  ex:HOW([`In 1 intero entrano ${d} pezzi da ${fr(1,d)}.`,`In ${n} interi: ${n} × ${d} = ${n*d}.`,`${n} : ${fr(1,d)} = ${n*d}.`],[`فوحدة كيدخلو ${d} طراف ديال ${fr(1,d)}.`,`ف ${n} وحدات: ${n} × ${d} = ${n*d}.`,`${n} : ${fr(1,d)} = ${n*d}.`])}},
+()=>{const [l,n,d]=pick([[6,3,4],[5,1,2],[4,2,3]]);return {type:"input",ans:[l*d/n,1],
+  q:B(`Avete ${l} litri d'acqua e borracce da ${fr(n,d)} di litro. Quante borracce riempite?`,`عندكم ${l} لتر ديال الما وقراعي ديال ${fr(n,d)} لتر. شحال من قرعة غادي تعمرو؟`),
+  traps:[[[l*n/d,1],B("Hai moltiplicato per la frazione: per sapere quante borracce si riempiono bisogna dividere.","ضربتي فالكسر: باش نعرفو شحال من قرعة كنعمرو خاصنا نقسمو.")]],
+  help:B("Quante volte la borraccia entra in un litro? E in tutti i litri che avete?","شحال من مرة القرعة كتدخل فلتر واحد؟ وفكاع اللترات اللي عندكم؟"),
+  ex:HOW([`Devo capire quante volte ${fr(n,d)} entra in ${l}: è una divisione.`,`${l} : ${fr(n,d)} = ${l} × ${fr(d,n)}.`,`${l} × ${d} : ${n} = ${l*d/n} borracce.`],[`خاصنا نعرفو شحال من مرة ${fr(n,d)} كيدخل ف ${l}: هادي قسمة.`,`${l} : ${fr(n,d)} = ${l} × ${fr(d,n)}.`,`${l} × ${d} : ${n} = ${l*d/n} قراعي.`])}},
+()=>({type:"err",q:B(`Davide calcola ${fr(2,3)} : ${fr(4,5)}. In quale passaggio sbaglia?`,`داوود كيحسب ${fr(2,3)} : ${fr(4,5)}. فأشمن خطوة غلط؟`),
+  steps:[B("Per dividere per una frazione si moltiplica per la sua inversa.","باش نقسمو على كسر كنضربو فالمقلوب ديالو."),B(`${fr(2,3)} : ${fr(4,5)} = ${fr(2,3)} × ${fr(4,5)}`,`${fr(2,3)} : ${fr(4,5)} = ${fr(2,3)} × ${fr(4,5)}`),B(`= ${fr(8,15)}`,`= ${fr(8,15)}`)],wrong:1,
+  help:B("Controlla se la seconda frazione è stata davvero capovolta.","شوف واش الكسر الثاني تقلب بصح."),
+  ex:HOW([`L'inversa di ${fr(4,5)} è ${fr(5,4)}.`,`${fr(2,3)} × ${fr(5,4)} = ${fr(10,12)}.`,`Semplifico: ${fr(5,6)}.`],[`المقلوب ديال ${fr(4,5)} هو ${fr(5,4)}.`,`${fr(2,3)} × ${fr(5,4)} = ${fr(10,12)}.`,`كنبسّطو: ${fr(5,6)}.`])}),
+()=>({type:"match",q:B("Abbina ogni operazione al risultato.","ربط كل عملية مع النتيجة ديالها."),
+  pairs:[[`<bdi>${fr(1,2)} × 4</bdi>`,"2"],[`<bdi>3 : ${fr(1,3)}</bdi>`,"9"],[`<bdi>${fr(2,3)} × ${fr(3,2)}</bdi>`,"1"]],
+  help:B("«× 1/2» vuol dire la metà; «: 1/3» vuol dire quanti terzi ci stanno.","«× 1/2» كتعني النص؛ «: 1/3» كتعني شحال من ثلث كيدخل."),
+  ex:HOW(["1/2 × 4: la metà di 4 è 2.","3 : 1/3: in 3 interi ci sono 9 terzi.","2/3 × 3/2: una frazione per la sua inversa fa 1."],["1/2 × 4: النص ديال 4 هو 2.","3 : 1/3: ف 3 وحدات كاين 9 ديال الثلث.","2/3 × 3/2: كسر ضرب المقلوب ديالو كيعطي 1."])}),
+()=>{const [qi,a,st]=pick([[`(${fr(1,2)} + ${fr(1,4)}) × 4`,3,[["1/2 + 1/4 = 2/4 + 1/4 = 3/4","3/4 × 4 = 12/4 = 3"],["1/2 + 1/4 = 2/4 + 1/4 = 3/4","3/4 × 4 = 12/4 = 3"]]],[`(${fr(1,3)} + ${fr(1,6)}) × 6`,3,[["1/3 + 1/6 = 2/6 + 1/6 = 3/6","3/6 × 6 = 18/6 = 3"],["1/3 + 1/6 = 2/6 + 1/6 = 3/6","3/6 × 6 = 18/6 = 3"]]],[`(${fr(1,2)} − ${fr(1,4)}) × 8`,2,[["1/2 − 1/4 = 2/4 − 1/4 = 1/4","1/4 × 8 = 8/4 = 2"],["1/2 − 1/4 = 2/4 − 1/4 = 1/4","1/4 × 8 = 8/4 = 2"]]]]);return {type:"input",ans:[a,1],
+  q:B(`Calcola: ${qi}`,`حسب: <bdi>${qi}</bdi>`),
+  help:B("Prima calcola dentro la parentesi, poi moltiplica.","الأول حسب داخل القوس، من بعد ضرب."),
+  ex:HOW([`Prima la parentesi: ${st[0][0]}.`,`Poi la moltiplicazione: ${st[0][1]}.`,`Risultato: ${a}.`],[`الأول القوس: ${st[1][0]}.`,`من بعد الضرب: ${st[1][1]}.`,`النتيجة: ${a}.`])}},
+()=>({type:"mc",q:B("Quale prodotto è maggiore di 1?","أشمن ضرب كيعطي كثر من 1؟"),
+  opts:[[`<bdi>${fr(3,2)} × ${fr(4,3)}</bdi>`,1],[`<bdi>${fr(1,2)} × ${fr(3,4)}</bdi>`,0,B("Due frazioni minori di 1 danno un prodotto minore di 1.","جوج كسور صغار من 1 كيعطيو ضرب صغر من 1.")],[`<bdi>${fr(2,3)} × ${fr(3,4)}</bdi>`,0,B("Fa 1/2.","كيعطي 1/2.")],[`<bdi>${fr(5,6)} × ${fr(1,2)}</bdi>`,0,B("Fa 5/12.","كيعطي 5/12.")]],
+  help:B("Moltiplicando due numeri minori di 1 il risultato diventa ancora più piccolo. Cerca una frazione maggiore di 1.","إلا ضربنا جوج أرقام صغار من 1 النتيجة كتصغر كثر. قلّب على كسر كبر من 1."),
+  ex:HOW([`${fr(3,2)} e ${fr(4,3)} sono tutte e due maggiori di 1.`,`${fr(3,2)} × ${fr(4,3)} = ${fr(12,6)}.`,`${fr(12,6)} = 2: maggiore di 1.`],[`${fr(3,2)} و ${fr(4,3)} بجوج كبار من 1.`,`${fr(3,2)} × ${fr(4,3)} = ${fr(12,6)}.`,`${fr(12,6)} = 2: كبر من 1.`])}),
+()=>{const [l,n,d,a]=pick([[[3,2],2,3,[1,1]],[[3,4],2,3,[1,2]],[[5,2],2,5,[1,1]]]);return {type:"input",ans:a,
+  q:B(`Una borraccia contiene ${fr(l[0],l[1])} di litro. Ne bevete i ${fr(n,d)}. Quanti litri bevete?`,`القرعة فيها ${fr(l[0],l[1])} لتر. شربتو ${fr(n,d)} منها. شحال من لتر شربتو؟`),
+  help:B("«I 2/3 di» vuol dire «moltiplicare per 2/3».","«2/3 ديال» كتعني «نضربو ف 2/3»."),
+  ex:HOW([`«${fr(n,d)} di» vuol dire «× ${fr(n,d)}».`,`${fr(n,d)} × ${fr(l[0],l[1])} = ${fr(n*l[0],d*l[1])}.`,`Semplifico: ${frR(n*l[0],d*l[1])} di litro.`],[`«${fr(n,d)} ديال» كتعني «× ${fr(n,d)}».`,`${fr(n,d)} × ${fr(l[0],l[1])} = ${fr(n*l[0],d*l[1])}.`,`كنبسّطو: ${frR(n*l[0],d*l[1])} لتر.`])}},
+()=>{const [k,n,d]=pick([[3,2,9],[4,3,8],[5,2,15]]);return {type:"input",ans:[k*n,d],
+  q:B(`Calcola: ${k} × ${fr(n,d)}`,`حسب: ${k} × ${fr(n,d)}`),
+  traps:[[[k*n,k*d],B("Hai moltiplicato anche il denominatore: l'intero moltiplica solo il numeratore.","ضربتي حتى المقام: العدد الصحيح كيضرب غير البسط.")]],
+  help:B("Moltiplica l'intero per il numeratore e lascia il denominatore. Poi semplifica.","ضرب العدد الصحيح فالبسط وخلّي المقام. من بعد بسّط."),
+  ex:HOW([`L'intero moltiplica solo il numeratore: ${k} × ${n} = ${k*n}.`,`Il denominatore resta ${d}: ${fr(k*n,d)}.`,`Semplifico: ${frR(k*n,d)}.`],[`العدد الصحيح كيضرب غير البسط: ${k} × ${n} = ${k*n}.`,`المقام كيبقى ${d}: ${fr(k*n,d)}.`,`كنبسّطو: ${frR(k*n,d)}.`])}},
+()=>{const [m,n,d]=pick([[45,3,4],[20,1,3],[40,2,3],[15,1,4]]);return {type:"mc",
+  q:B(`Che frazione di un'ora sono ${m} minuti?`,`شنو هو الكسر ديال ساعة اللي كيساوي ${m} دقيقة؟`),
+  opts:[[fr(n,d),1],[fr(m,100),0,B("Un'ora ha 60 minuti, non 100.","الساعة فيها 60 دقيقة، ماشي 100.")],[fr(d,n),0,B("Numeratore e denominatore sono scambiati.","البسط والمقام تبدّلو.")]],
+  help:B("Un'ora ha 60 minuti: scrivi i minuti «su 60» e semplifica.","الساعة فيها 60 دقيقة: كتب الدقايق «على 60» وبسّط."),
+  ex:HOW([`Un'ora = 60 minuti.`,`${m} minuti su 60: ${fr(m,60)}.`,`Semplifico: ${fr(n,d)}.`],[`الساعة = 60 دقيقة.`,`${m} دقيقة على 60: ${fr(m,60)}.`,`كنبسّطو: ${fr(n,d)}.`])}},
+()=>{const [[a,b],[c,d]]=pick([[[3,4],[2,3]],[[2,5],[5,6]],[[1,2],[4,5]]]);return {type:"input",ans:[a*c,b*d],
+  q:B(`Quanto fa ${fr(a,b)} di ${fr(c,d)}?`,`شحال كيعطي ${fr(a,b)} ديال ${fr(c,d)}؟`),
+  traps:[[[a+c,b+d],B("«Di» vuol dire per, non più.","«ديال» كتعني ضرب، ماشي زائد.")],[[a*d,b*c],B("Questa è una divisione: «di» vuol dire per.","هادي قسمة: «ديال» كتعني ضرب.")]],
+  help:B("Tra due frazioni, «di» vuol dire «per».","بين جوج كسور، «ديال» كتعني «ضرب»."),
+  ex:HOW([`«${fr(a,b)} di ${fr(c,d)}» = ${fr(a,b)} × ${fr(c,d)}.`,`${a} × ${c} = ${a*c}, ${b} × ${d} = ${b*d}: ${fr(a*c,b*d)}.`,`Semplifico: ${frR(a*c,b*d)}.`],[`«${fr(a,b)} ديال ${fr(c,d)}» = ${fr(a,b)} × ${fr(c,d)}.`,`${a} × ${c} = ${a*c}، ${b} × ${d} = ${b*d}: ${fr(a*c,b*d)}.`,`كنبسّطو: ${frR(a*c,b*d)}.`])}},
+()=>({type:"mc",one:true,q:B("Quale sequenza è in ordine crescente?","أشمن ترتيب من الصغير للكبير؟"),
+  opts:[[B(`${mixed(1,1,2)} < ${fr(5,3)} < ${fr(7,4)}`,`<bdi>${mixedA(1,1,2)} < ${fr(5,3)} < ${fr(7,4)}</bdi>`),1],[B(`${fr(7,4)} < ${fr(5,3)} < ${mixed(1,1,2)}`,`<bdi>${fr(7,4)} < ${fr(5,3)} < ${mixedA(1,1,2)}</bdi>`),0,B("Questo è l'ordine decrescente.","هادا الترتيب من الكبير للصغير.")],[B(`${fr(5,3)} < ${mixed(1,1,2)} < ${fr(7,4)}`,`<bdi>${fr(5,3)} < ${mixedA(1,1,2)} < ${fr(7,4)}</bdi>`),0,B("5/3 ≈ 1,67 è più di 1 e 1/2.","5/3 ≈ 1,67 كثر من 1 و 1/2.")]],
+  help:B("Trasforma tutto in numeri decimali, oppure guarda di quanto ogni numero supera 1.","بدّل كلشي لأعداد عشرية، ولا شوف بشحال كل رقم كيفوت 1."),
+  ex:HOW(["1 e 1/2 = 1,5.","5/3 ≈ 1,67 e 7/4 = 1,75.","Ordine: 1 e 1/2 < 5/3 < 7/4."],["1 و 1/2 = 1,5.","5/3 ≈ 1,67 و 7/4 = 1,75.","الترتيب: 1 و 1/2 < 5/3 < 7/4."])}),
+()=>{const [t,f1,f2]=pick([[12,[1,3],[1,2]],[18,[1,3],[1,2]],[20,[1,4],[1,3]]]);const a=t*f1[0]/f1[1],r=t-a,b=r*f2[0]/f2[1];return {type:"input",ans:[b,1],
+  q:B(`Un cammino nel deserto è lungo ${t} km. Il primo giorno ne fate ${fr(...f1)}, il secondo giorno ${fr(...f2)} di quello che resta. Quanti km fate il secondo giorno?`,`طريق فالصحرا طولها ${t} كلم. النهار الأول مشيتو ${fr(...f1)} منها، والنهار الثاني ${fr(...f2)} من اللي بقى. شحال من كلم مشيتو النهار الثاني؟`),
+  traps:[[[t*f2[0]/f2[1],1],B("Hai calcolato la frazione di tutto il cammino, non di quello che resta dopo il primo giorno.","حسبتي الكسر ديال الطريق كاملة، ماشي ديال اللي بقى من بعد النهار الأول.")]],
+  help:B("Procedi per gradi: prima il primo giorno, poi quanto resta, e solo dopo la frazione del resto.","خطوة بخطوة: الأول النهار الأول، من بعد شحال بقى، ومن بعد الكسر ديال اللي بقى."),
+  ex:HOW([`Primo giorno: ${fr(...f1)} di ${t} = ${a} km.`,`Restano ${t} − ${a} = ${r} km.`,`Secondo giorno: ${fr(...f2)} di ${r} = ${b} km.`],[`النهار الأول: ${fr(...f1)} من ${t} = ${a} كلم.`,`بقاو ${t} − ${a} = ${r} كلم.`,`النهار الثاني: ${fr(...f2)} من ${r} = ${b} كلم.`])}},
+()=>{const [k,n,d]=pick([[8,2,3],[6,3,4],[10,5,2]]);return {type:"mc",
+  q:B(`Quanto fa ${k} : ${fr(n,d)}?`,`شحال كيعطي ${k} : ${fr(n,d)}؟`),
+  opts:[[String(k*d/n),1],[fr(k*n,d),0,B("Hai moltiplicato per la frazione invece che per la sua inversa.","ضربتي فالكسر بلاصة المقلوب ديالو.")],[fr(n,k*d),0,B(`Prova: quante volte ci sta la frazione in ${k}?`,`جرّب: شحال من مرة كيدخل الكسر ف ${k}؟`)]],
+  help:B("Dividere per una frazione vuol dire moltiplicare per la sua inversa.","القسمة على كسر كتعني الضرب فالمقلوب ديالو."),
+  ex:HOW([`L'inversa di ${fr(n,d)} è ${fr(d,n)}.`,`${k} × ${fr(d,n)} = ${fr(k*d,n)}.`,`${k*d} : ${n} = ${k*d/n}.`],[`المقلوب ديال ${fr(n,d)} هو ${fr(d,n)}.`,`${k} × ${fr(d,n)} = ${fr(k*d,n)}.`,`${k*d} : ${n} = ${k*d/n}.`])}},
+];
+
+/* ===================== ENIGMI FINALI · La Torre dei Venti ===================== */
+const FINAL=[
+()=>({type:"input",ans:[6,1],
+  q:B(`La porta della Torre ha 24 lucchetti. La prima chiave apre ${fr(1,4)} dei lucchetti, la seconda ${fr(1,3)}, la terza ${fr(1,6)}. Quanti lucchetti restano chiusi?`,`الباب ديال البرج فيه 24 قفل. المفتاح الأول كيحل ${fr(1,4)} من الأقفال، الثاني ${fr(1,3)}، والثالث ${fr(1,6)}. شحال من قفل بقى مسدود؟`),
+  traps:[[[18,1],B("18 sono i lucchetti che si aprono: quanti restano chiusi?","18 هوما الأقفال اللي تحلّو: شحال بقى مسدود؟")]],
+  help:B("Porta le tre frazioni in dodicesimi e sommale: che parte dei lucchetti si apre? Quanti lucchetti sono?","رجع الكسور الثلاثة ل 12 وجمعهم: شحال من جزء من الأقفال كيتحل؟ شحال من قفل هادا؟"),
+  ex:HOW([`In dodicesimi: ${fr(3,12)} + ${fr(4,12)} + ${fr(2,12)} = ${fr(9,12)} = ${fr(3,4)}.`,`${fr(3,4)} di 24 = 18 lucchetti aperti.`,`Restano chiusi 24 − 18 = 6.`],[`ب 12: ${fr(3,12)} + ${fr(4,12)} + ${fr(2,12)} = ${fr(9,12)} = ${fr(3,4)}.`,`${fr(3,4)} من 24 = 18 قفل تحلّو.`,`بقاو مسدودين 24 − 18 = 6.`])}),
+()=>({type:"input",ans:[24,1],
+  q:B(`La scala della Torre ha 60 gradini. Ne salite i ${fr(2,5)}, poi ${fr(1,3)} di quelli rimasti. Quanti gradini mancano ancora?`,`الدروج ديال البرج فيهم 60 درجة. طلعتو ${fr(2,5)} منهم، ومن بعد ${fr(1,3)} من اللي بقاو. شحال من درجة باقي؟`),
+  traps:[[[36,1],B("36 sono i gradini rimasti dopo la prima salita: poi ne salite ancora un terzo.","36 هوما الدروج اللي بقاو من بعد الطلعة الأولى: من بعد طلعتو الثلث ديالهم.")],[[12,1],B("12 sono i gradini della seconda salita: quanti ne mancano ancora?","12 هوما الدروج ديال الطلعة الثانية: شحال باقي؟")]],
+  help:B("Procedi per gradi: quanti gradini salite la prima volta? Quanti ne restano? Poi calcola 1/3 di quelli.","خطوة بخطوة: شحال طلعتو المرة الأولى؟ شحال بقى؟ من بعد حسب 1/3 ديالهم."),
+  ex:HOW([`${fr(2,5)} di 60 = 24 gradini: ne restano 36.`,`${fr(1,3)} di 36 = 12 gradini.`,`Mancano 36 − 12 = 24 gradini.`],[`${fr(2,5)} من 60 = 24 درجة: بقاو 36.`,`${fr(1,3)} من 36 = 12 درجة.`,`باقي 36 − 12 = 24 درجة.`])}),
+()=>({type:"input",ans:[1,1],
+  q:B(`Sulla porta è inciso: (${fr(2,3)} + ${fr(1,6)}) : ${fr(5,6)}. Qual è il risultato?`,`فالباب مكتوب: <bdi>(${fr(2,3)} + ${fr(1,6)}) : ${fr(5,6)}</bdi>. شنو هي النتيجة؟`),
+  help:B("Prima la parentesi. Poi ricorda: che cosa fa un numero diviso per sé stesso?","الأول القوس. من بعد تفكّر: شحال كيعطي رقم مقسوم على راسو؟"),
+  ex:HOW([`Parentesi: ${fr(2,3)} = ${fr(4,6)}, ${fr(4,6)} + ${fr(1,6)} = ${fr(5,6)}.`,`${fr(5,6)} : ${fr(5,6)}: un numero diviso per sé stesso.`,`Risultato: 1.`],[`القوس: ${fr(2,3)} = ${fr(4,6)}، ${fr(4,6)} + ${fr(1,6)} = ${fr(5,6)}.`,`${fr(5,6)} : ${fr(5,6)}: رقم مقسوم على راسو.`,`النتيجة: 1.`])}),
+()=>({type:"input",ans:[85,1],
+  q:B(`L'orologio della Torre si apre dopo ${fr(3,4)} d'ora più ${fr(2,3)} d'ora. Quanti minuti bisogna aspettare?`,`الساعة ديال البرج كتتحل من بعد ${fr(3,4)} ديال ساعة زايد ${fr(2,3)} ديال ساعة. شحال من دقيقة خاصنا نتسناو؟`),
+  traps:[[[17,12],B("Hai sommato le frazioni d'ora: ora trasforma il risultato in minuti.","جمعتي الكسور ديال الساعة: دابا بدّل النتيجة لدقايق.")]],
+  help:B("Un'ora sono 60 minuti: calcola separatamente 3/4 e 2/3 di 60, poi somma.","الساعة هي 60 دقيقة: حسب بوحدو 3/4 و 2/3 من 60، من بعد جمع."),
+  ex:HOW([`${fr(3,4)} di 60 minuti = 45 minuti.`,`${fr(2,3)} di 60 minuti = 40 minuti.`,`45 + 40 = 85 minuti.`],[`${fr(3,4)} من 60 دقيقة = 45 دقيقة.`,`${fr(2,3)} من 60 دقيقة = 40 دقيقة.`,`45 + 40 = 85 دقيقة.`])}),
+()=>({type:"input",ans:[1,8],
+  q:B(`Per accendere il grande telescopio serve 1 litro di olio. Avete ${fr(1,2)} litro, poi ${fr(1,4)}, poi ${fr(1,8)}. Che frazione di litro manca?`,`باش نشعلو التيليسكوب الكبير خاص 1 لتر ديال الزيت. عندكم ${fr(1,2)} لتر، من بعد ${fr(1,4)}، من بعد ${fr(1,8)}. شنو هو الكسر ديال اللتر اللي ناقص؟`),
+  traps:[[[7,8],B("7/8 è l'olio che avete già: quanto ne manca per arrivare a 1 litro?","7/8 هو الزيت اللي عندكم: شحال ناقص باش توصلو ل 1 لتر؟")]],
+  help:B("Trasforma tutto in ottavi e somma: quanti ottavi mancano per arrivare a 8/8?","بدّل كلشي ل ثُمُن وجمع: شحال من ثُمُن ناقص باش توصلو ل 8/8؟"),
+  ex:HOW([`In ottavi: ${fr(4,8)} + ${fr(2,8)} + ${fr(1,8)} = ${fr(7,8)}.`,`1 litro = ${fr(8,8)}.`,`Manca ${fr(8,8)} − ${fr(7,8)} = ${fr(1,8)}.`],[`ب ثُمُن: ${fr(4,8)} + ${fr(2,8)} + ${fr(1,8)} = ${fr(7,8)}.`,`1 لتر = ${fr(8,8)}.`,`ناقص ${fr(8,8)} − ${fr(7,8)} = ${fr(1,8)}.`])}),
+()=>({type:"input",ans:[3,4],
+  q:B("Il custode dice: «Vi ho aspettato 90 minuti». Che frazione di 2 ore sono 90 minuti?","العسّاس قال: «تسنّيتكم 90 دقيقة». شنو هو الكسر ديال جوج ساعات اللي كيساوي 90 دقيقة؟"),
+  traps:[[[90,60],B("Hai usato i minuti di un'ora sola: le ore sono due.","استعملتي الدقايق ديال ساعة وحدة: الساعات جوج.")]],
+  help:B("Quanti minuti ci sono in 2 ore? Scrivi 90 su quel numero e semplifica.","شحال من دقيقة كاينة فجوج ساعات؟ كتب 90 على داك الرقم وبسّط."),
+  ex:HOW([`2 ore = 120 minuti.`,`90 minuti su 120: ${fr(90,120)}.`,`Semplifico per 30: ${fr(3,4)}.`],[`جوج ساعات = 120 دقيقة.`,`90 دقيقة على 120: ${fr(90,120)}.`,`كنبسّطو على 30: ${fr(3,4)}.`])}),
+];
+
+/* ---------- argomento di ogni prova (per il diario di viaggio) ---------- */
+const TP={rap:"leggere e rappresentare le frazioni",nd:"numeratore e denominatore",qt:"frazione di una quantità",cf:"confronto tra frazioni",lg:"parti uguali e nomi delle frazioni",rt:"frazioni sulla retta",it:"frazioni e intero",tp:"frazioni proprie, improprie, apparenti",
+eq:"frazioni equivalenti",sm:"semplificazione",
+sd:"addizione e sottrazione con lo stesso denominatore",dd:"addizione e sottrazione con denominatori diversi",pb:"problemi con le frazioni",cm:"quanto manca all'intero",
+ml:"moltiplicazione",dv:"divisione e inversa",mx:"numeri misti",ex:"espressioni",fn:"enigma finale"};
+const TOP=[
+["rap","rap","rap","rap","rap","nd","nd","qt","cf","nd","lg","lg","rt","rt","it","it","tp","tp","qt","rap"],
+["eq","eq","sm","cf","cf","cf","rt","eq","eq","sm","cf","cf","sm","eq","eq","eq","cf","cf","sm","rt"],
+["sd","sd","dd","dd","dd","qt","pb","cm","dd","sd","cm","dd","dd","pb","dd","dd","pb","pb","qt","dd"],
+["ml","dv","dv","mx","mx","ml","ml","dv","pb","dv","ml","ex","ml","pb","ml","pb","ml","mx","pb","dv"],
+["fn","fn","fn","fn","fn","fn"]].map(r=>r.map(k=>TP[k]));
+
+window.BANK={levels:[L1,L2,L3,L4],final:FINAL,topics:TOP,B,pairs:PAIRS};
+})();
+
+</script>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sleep=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+const gcd=(a,b)=>b?gcd(b,a%b):Math.abs(a);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const store={get(k,d){try{const v=localStorage.getItem("mappa:"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("mappa:"+k,JSON.stringify(v))}catch(e){}}};
+
+/* ================= storia ================= */
+const LEVELS=[
+  {name:"Il Porto delle Vele",nameA:"مرسى الشرايط",kick:"Tappa 1 di 4",kickA:"المرحلة 1 من 4",story:"Al porto i pescatori dividono reti, vele e pescato. Aiutateli a capire che cos'è una frazione e vi daranno il primo pezzo della mappa.",storyA:"فالمرسى الصيّادة كيقسمو الشباك والشرايط والحوت. عاونوهم تفهمو شنو هو الكسر، وغادي يعطيوكم الطرف الأول من الخريطة.",tag:"Capire le frazioni",tagA:"نفهمو الكسور"},
+  {name:"Il Bosco degli Specchi",nameA:"غابة المرايات",kick:"Tappa 2 di 4",kickA:"المرحلة 2 من 4",story:"Nel bosco ogni sentiero ha più nomi: 2/4 e 1/2 portano nello stesso posto. Riconoscete le frazioni equivalenti e confrontatele per non perdervi.",storyA:"فالغابة كل طريق عندها بزاف ديال السميات: 2/4 و 1/2 كيوصلو لنفس البلاصة. عرفو الكسور المكافئة وقارنوهم باش ما تتلفوش.",tag:"Equivalenze e confronto",tagA:"الكسور المكافئة والمقارنة"},
+  {name:"Il Passo delle Nevi",nameA:"ممر الثلج",kick:"Tappa 3 di 4",kickA:"المرحلة 3 من 4",story:"Sul passo bisogna mettere insieme le provviste e calcolare quanta strada manca. Qui le frazioni si sommano e si sottraggono.",storyA:"فالممر خاصنا نجمعو الماكلة ونحسبو شحال باقي من الطريق. هنا الكسور كيتجمعو وكيتنقصو.",tag:"Addizione e sottrazione",tagA:"الجمع والطرح"},
+  {name:"Il Deserto delle Dune",nameA:"صحرا الكثبان",kick:"Tappa 4 di 4",kickA:"المرحلة 4 من 4",story:"Nel deserto l'acqua si divide in parti e le distanze si moltiplicano. L'ultima tappa prima della Torre.",storyA:"فالصحرا الما كيتقسم لطراف والمسافات كيتضربو. هادي آخر مرحلة قبل البرج.",tag:"Moltiplicazione e divisione",tagA:"الضرب والقسمة"},
+  {name:"La Torre dei Venti",nameA:"برج الرياح",kick:"Enigma finale",kickA:"اللغز الأخير",story:"La mappa è completa: davanti a voi c'è la porta dell'Osservatorio. Il custode propone un solo enigma.",storyA:"الخريطة كاملة: قدّامكم الباب ديال المرصد. العسّاس عندو لغز واحد بركة.",tag:"L'enigma della Torre",tagA:"لغز البرج"},
+];
+const INTRO="Il vecchio cartografo Ottavio ha lasciato una mappa per raggiungere l'Osservatorio sulla Torre dei Venti. Ma il vento l'ha strappata in quattro pezzi, sparsi lungo il cammino. Ogni tappa superata vi restituisce un quarto della mappa. Finché le lanterne sono accese potete sbagliare; se si spengono tutte, la mappa vola via.";
+const INTRO_A="الرسّام ديال الخرايط، أوتافيو، خلّى خريطة باش نوصلو للمرصد اللي فوق برج الرياح. ولكن الريح قطعاتها على ربعة ديال الطراف وفرّقاتهم فالطريق. كل مرحلة كتدوزوها كترجع ليكم ربع ديال الخريطة. ما دامو الفوانيس شاعلين تقدرو تغلطو؛ إلا طفاو كاملين، الخريطة كتطير.";
+const U=(it,ar)=>BANK.B(it,ar);
+const LV=(i,f)=>U(LEVELS[i][f],LEVELS[i][f+"A"]);
+
+/* ================= impostazioni ================= */
+const CFG=Object.assign({errs:[2,3,4,5,0],restart:"zero",sound:true,big:false,help:"all",darija:false},store.get("cfg",{}));
+function loadCfgUI(){CFG.errs.forEach((v,i)=>$("e"+i).value=v);$("restartMode").value=CFG.restart;$("helpMode").value=CFG.help;$("snd").setAttribute("aria-pressed",CFG.sound);$("big").setAttribute("aria-pressed",CFG.big);document.documentElement.classList.toggle("big",CFG.big);document.documentElement.classList.toggle("dar",CFG.darija);$("dar").setAttribute("aria-pressed",CFG.darija)}
+$("dar").onclick=()=>{CFG.darija=!CFG.darija;store.set("cfg",CFG);loadCfgUI()};
+$("apply").onclick=()=>{CFG.errs=[0,1,2,3,4].map(i=>Math.max(0,Math.min(9,+$("e"+i).value||0)));CFG.restart=$("restartMode").value;CFG.help=$("helpMode").value;store.set("cfg",CFG);newRun(false)};
+$("snd").onclick=()=>{CFG.sound=!CFG.sound;store.set("cfg",CFG);loadCfgUI()};
+$("big").onclick=()=>{CFG.big=!CFG.big;store.set("cfg",CFG);loadCfgUI()};
+
+/* ================= suoni (sintetizzati, partono solo dopo un tocco) ================= */
+let AC=null;
+function tone(f,t0,d,type="sine",g=.18){if(!CFG.sound)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),v=AC.createGain();o.type=type;o.frequency.value=f;const s=AC.currentTime+t0;v.gain.setValueAtTime(0,s);v.gain.linearRampToValueAtTime(g,s+.02);v.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(v).connect(AC.destination);o.start(s);o.stop(s+d+.05)}catch(e){}}
+const SND={
+  ok(){tone(660,0,.25,"triangle");tone(990,.1,.35,"triangle")},
+  bad(){tone(180,0,.4,"sawtooth",.12);tone(120,.12,.5,"sawtooth",.1)},
+  level(){[523,659,784,1047].forEach((f,i)=>tone(f,i*.14,.5,"triangle",.16))},
+  lost(){[392,330,262,196].forEach((f,i)=>tone(f,i*.2,.55,"sine",.15))},
+  win(){[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,i*.13,.6,"triangle",.15))},
+  relit(){tone(523,0,.25,"sine",.14);tone(784,.12,.4,"sine",.14)},
+};
+
+/* ================= scenari (SVG generati) ================= */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const VARIANTS=[
+  {id:"alba",sky:["#f2a37f","#fde2bf"],tint:["#ff7a59",.10],sun:"#ffd88a",stars:false},
+  {id:"giorno",sky:["#5aa9e0","#cfe8f6"],tint:null,sun:"#fff1a8",stars:false},
+  {id:"tramonto",sky:["#4d3a86","#f0905f"],tint:["#5b2a6e",.22],sun:"#ffb36b",stars:false},
+  {id:"notte",sky:["#0b1730","#26446f"],tint:["#0a1530",.42],sun:"#eef3ff",stars:true},
+];
+function sceneSVG(level,v,seed){
+  const r=rng(seed),W=1600,H=900;let s="";
+  const R=(a,b)=>a+r()*(b-a);
+  s+=`<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${v.sky[0]}"/><stop offset="1" stop-color="${v.sky[1]}"/></linearGradient>
+  <radialGradient id="glow"><stop offset="0" stop-color="${v.sun}" stop-opacity=".9"/><stop offset="1" stop-color="${v.sun}" stop-opacity="0"/></radialGradient></defs>`;
+  s+=`<rect width="${W}" height="${H}" fill="url(#sk)"/>`;
+  if(v.stars)for(let i=0;i<140;i++)s+=`<circle cx="${R(0,W)}" cy="${R(0,H*.55)}" r="${R(.6,2.2)}" fill="#fff" opacity="${R(.4,1)}"/>`;
+  const sx=R(250,1350),sy=R(110,260);
+  s+=`<circle cx="${sx}" cy="${sy}" r="180" fill="url(#glow)"/><circle cx="${sx}" cy="${sy}" r="${v.id==="notte"?48:62}" fill="${v.sun}"/>`;
+  const hill=(y,amp,col,n=6)=>{let d=`M0,${H} L0,${y}`;const st=W/n;for(let i=0;i<=n;i++){const x=i*st;d+=` Q${x-st/2},${y-R(0,amp)} ${x},${y-R(-amp/3,amp/2)}`}return `<path d="${d} L${W},${H} Z" fill="${col}"/>`};
+  if(level===0){ // porto
+    s+=`<path d="M${R(900,1100)},560 q90,-90 180,-40 q60,-50 140,0 q40,-20 90,40 Z" fill="#5d6b78" opacity=".6"/>`;
+    s+=`<rect y="560" width="${W}" height="340" fill="#2f6e95"/>`;
+    for(let i=0;i<9;i++){const y=575+i*36;let d=`M0,${y}`;for(let x=0;x<=W;x+=80)d+=` q40,${-8+r()*4} 80,0`;s+=`<path d="${d}" fill="none" stroke="#bfe3f2" stroke-opacity="${.15+i*.05}" stroke-width="3"/>`}
+    s+=`<rect x="0" y="640" width="520" height="34" fill="#6b4a2b"/>`;for(let x=20;x<520;x+=70)s+=`<rect x="${x}" y="660" width="16" height="140" fill="#4f3520"/>`;
+    for(let i=0;i<4;i++){const x=R(600,1500),y=R(600,760),k=R(.6,1.1),c=["#e6e0d0","#c94f32","#f2c14e","#ffffff"][Math.floor(r()*4)];
+      s+=`<g transform="translate(${x},${y}) scale(${k})"><path d="M-80,0 h160 l-25,34 h-110 Z" fill="#5a3a22"/><rect x="-3" y="-150" width="6" height="150" fill="#3b2a1c"/><path d="M4,-145 L4,-10 L95,-10 Z" fill="${c}"/><path d="M-4,-120 L-4,-10 L-60,-10 Z" fill="${c}" opacity=".85"/></g>`}
+    for(let i=0;i<6;i++){const x=R(100,1500),y=R(120,420);s+=`<path d="M${x},${y} q14,-12 26,0 q12,-12 26,0" fill="none" stroke="#2a2a2a" stroke-width="3"/>`}
+  }else if(level===1){ // bosco
+    s+=hill(560,90,"#7fa88a");s+=hill(640,80,"#4f7d5c");
+    const layers=[[540,.5,"#3f6b4b"],[640,.75,"#2e5639"],[760,1.05,"#1f3f29"]];
+    for(const [y0,k,c] of layers)for(let i=0;i<22;i++){const x=R(-50,W+50),y=y0+R(-20,40),h=150*k*R(.8,1.25);s+=`<g transform="translate(${x},${y})"><rect x="${-6*k}" y="0" width="${12*k}" height="${30*k}" fill="#4a3421"/><path d="M0,${-h} L${h*.32},${-h*.45} L${h*.18},${-h*.45} L${h*.42},0 L${-h*.42},0 L${-h*.18},${-h*.45} L${-h*.32},${-h*.45} Z" fill="${c}"/></g>`}
+    s+=`<path d="M720,${H} C760,800 640,760 760,700 S900,620 820,580" fill="none" stroke="#d9c79a" stroke-width="40" stroke-linecap="round" opacity=".75"/>`;
+    s+=`<rect width="${W}" height="${H}" fill="#e8f2e4" opacity=".08"/>`;
+  }else if(level===2){ // montagne
+    const range=(base,amp,col,snow,n)=>{let pts=[[0,H],[0,base]];const st=W/n,peaks=[];for(let i=0;i<=n;i++){const x=i*st+R(-st/4,st/4),y=base-R(amp*.4,amp);pts.push([x,y]);peaks.push([x,y]);if(i<n)pts.push([x+st/2,base-R(0,amp*.3)])}pts.push([W,base],[W,H]);
+      let p=`<polygon points="${pts.map(q=>q.map(Math.round).join(",")).join(" ")}" fill="${col}"/>`;
+      if(snow)for(const [x,y] of peaks)p+=`<polygon points="${x},${y} ${x+40},${y+55} ${x+18},${y+48} ${x},${y+64} ${x-16},${y+46} ${x-38},${y+55}" fill="#f4f7fb"/>`;return p};
+    s+=range(560,300,"#8a97ad",true,5);
+    for(let i=0;i<5;i++){const x=R(0,W),y=R(140,380);s+=`<g opacity=".85" fill="#fff"><ellipse cx="${x}" cy="${y}" rx="90" ry="26"/><ellipse cx="${x+50}" cy="${y-14}" rx="60" ry="24"/><ellipse cx="${x-50}" cy="${y-6}" rx="50" ry="18"/></g>`}
+    s+=range(680,240,"#5d6a80",true,6);s+=range(820,140,"#3c475a",false,7);
+    s+=`<path d="M0,${H} L0,800 Q400,760 800,820 T1600,790 L1600,${H} Z" fill="#eef3f8"/>`;
+  }else if(level===3){ // deserto
+    const dune=(y,amp,col)=>`<path d="M0,${H} L0,${y} C400,${y-amp} 700,${y+amp*.6} 1000,${y-amp*.4} S1450,${y-amp} 1600,${y} L1600,${H} Z" fill="${col}"/>`;
+    s+=dune(600,80,"#d9a86a");
+    for(let i=0;i<3;i++){const x=R(900,1450),h=R(90,170);s+=`<rect x="${x}" y="${600-h}" width="26" height="${h}" fill="#b98a5a"/><rect x="${x-6}" y="${600-h-12}" width="38" height="14" fill="#a87a4c"/>`}
+    s+=dune(690,70,"#c98f50");s+=dune(800,60,"#b37a3c");
+    for(let i=0;i<4;i++){const x=R(80,1500),y=R(720,860),k=R(.6,1);s+=`<g transform="translate(${x},${y}) scale(${k})" fill="#3f6b3a"><rect x="-14" y="-140" width="28" height="140" rx="14"/><rect x="-54" y="-100" width="22" height="60" rx="11"/><rect x="-54" y="-52" width="50" height="20" rx="10"/><rect x="34" y="-120" width="22" height="70" rx="11"/><rect x="6" y="-62" width="50" height="20" rx="10"/></g>`}
+  }else{ // torre
+    s+=hill(640,110,"#6d7a63",5);s+=hill(760,70,"#4d5947",6);
+    const tx=R(1000,1250);
+    s+=`<g transform="translate(${tx},640)"><polygon points="-120,-560 0,-680 120,-560" fill="#7a3b2a"/>
+      <rect x="-95" y="-560" width="190" height="560" fill="#9d8f7c"/>
+      ${Array.from({length:14},(_,i)=>`<line x1="-95" y1="${-520+i*38}" x2="95" y2="${-520+i*38}" stroke="#7d705f" stroke-width="3"/>`).join("")}
+      ${[-80,-40,0,40].map(x=>`<rect x="${x}" y="-590" width="30" height="30" fill="#9d8f7c"/>`).join("")}
+      <rect x="-30" y="-470" width="60" height="90" rx="30" fill="#ffd27a"/><rect x="-30" y="-300" width="60" height="80" rx="30" fill="#ffd27a" opacity=".85"/>
+      <rect x="-40" y="-120" width="80" height="120" rx="40" fill="#3b2a1c"/></g>`;
+    s+=`<circle cx="${tx}" cy="170" r="240" fill="url(#glow)" opacity=".7"/>`;
+  }
+  if(v.tint)s+=`<rect width="${W}" height="${H}" fill="${v.tint[0]}" opacity="${v.tint[1]}"/>`;
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${s}</svg>`;
+}
+function setScene(level){
+  const bg=$("bg"),old=bg.querySelector(".scene.on");
+  const d=document.createElement("div");d.className="scene";d.innerHTML=sceneSVG(level,VARIANTS[RUN.variants[level]],RUN.seed+level*977);
+  bg.appendChild(d);requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add("on")));
+  if(old){old.classList.remove("on");setTimeout(()=>old.remove(),1500)}
+}
+
+/* ================= mappa ================= */
+const QUAD=[[0,50],[50,50],[0,0],[50,0]]; // basso-sinistra, basso-destra, alto-sinistra, alto-destra
+const PATH="M10,90 C30,70 45,85 60,72 S90,60 80,48 S40,40 30,30 S60,10 88,12";
+function mapSVG(n,anim){ // n pezzi recuperati; anim: "in" per l'ultimo, "out" per tutti
+  let s=`<defs><clipPath id="clipAll"><rect width="100" height="100" rx="6"/></clipPath></defs><rect width="100" height="100" rx="6" fill="#3a2d20" opacity=".35"/>`;
+  QUAD.forEach(([x,y],i)=>{
+    const got=i<n,cls=anim==="in"&&i===n-1?"piece-in":anim==="out"&&got?"piece-out":"";
+    const fx=(x?60:-60)+"px",fy=(y?60:-60)+"px",frr=(i%2?160:-160)+"deg";
+    s+=`<g class="${cls}" style="--fx:${fx};--fy:${fy};--fr:${frr};transform-box:fill-box;transform-origin:center">
+      <svg x="${x}" y="${y}" width="50" height="50" viewBox="${x} ${y} 50 50" overflow="hidden">
+        <rect x="${x}" y="${y}" width="50" height="50" fill="${got?"#efdcb3":"#5b4a38"}" stroke="#7a5c3a" stroke-width="1.2"/>
+        ${got?`<path d="${PATH}" fill="none" stroke="#9c4a1a" stroke-width="2.4" stroke-dasharray="4 3"/>`:`<text x="${x+25}" y="${y+32}" text-anchor="middle" font-size="20" fill="#d9c49c" font-family="Georgia">?</text>`}
+        ${got&&i===0?`<circle cx="10" cy="90" r="4" fill="#2e7d4a"/><text x="16" y="94" font-size="9" font-weight="700" fill="#2a2118">A</text>`:""}
+        ${got&&i===3?`<rect x="84" y="4" width="8" height="12" fill="#7a3b2a"/><text x="74" y="14" font-size="9" font-weight="700" fill="#2a2118">B</text>`:""}
+      </svg></g>`;
+  });
+  return s;
+}
+
+/* ================= stato del viaggio ================= */
+const RUN={level:0,variants:[0,1,2,3,0],seed:1,pieces:0,correct:0,lamps:0,used:new Set(),q:null,sel:null,disabled:new Set(),buf:"",pairs:{},pick:null,right:[],shaded:new Set(),locked:false,
+  streak:0,levelErr:0,stars:[false,false,false,false,false],helpsRun:0,log:[],practice:false,pcount:[0,0]};
+const NEED=[4,4,4,4,1];
+const STREAK=3; // risposte giuste di fila per riaccendere una lanterna
+function newVariants(){
+  const prev=RUN.variants.slice();let v;
+  do{v=[0,1,2,3,4].map(()=>Math.floor(Math.random()*4))}while(v.filter((x,i)=>x===prev[i]).length>1);
+  RUN.variants=v;RUN.seed=Math.floor(Math.random()*1e9);
+}
+const starSVG=on=>`<svg viewBox="0 0 24 24" class="star ${on?"on":""}" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z"/></svg>`;
+function renderHUD(){
+  const L=LEVELS[RUN.level];
+  if(RUN.practice){
+    $("where").innerHTML=`<span class="badge">Allenamento</span> ${LV(RUN.level,"name")}`;
+    $("lanterns").innerHTML=`<span class="hint">${U("Nessuna lanterna da perdere: ci si allena.","ما كاين حتى فانوس يطفى: غير كنتمرّنو.")}</span>`;
+    $("steps4").innerHTML=`<span class="hint">${U(`Giuste ${RUN.pcount[0]} · da rivedere ${RUN.pcount[1]}`,`صحاح ${RUN.pcount[0]} · خاصهم مراجعة ${RUN.pcount[1]}`)}</span>`;
+    $("streak").hidden=true;$("practiceExit").hidden=false;$("practiceBtn").hidden=true;
+  }else{
+    $("where").innerHTML=U(`${L.kick} · ${L.name}`,`${L.kickA} · ${L.nameA}`);
+    const max=CFG.errs[RUN.level];
+    $("lanterns").innerHTML=max===0?`<span class="nolamp">${U("Nessuna lanterna: un solo tentativo","ما كاين حتى فانوس: محاولة وحدة بركة")}</span>`:Array.from({length:max},(_,i)=>lampSVG(i<RUN.lamps)).join("");
+    $("steps4").innerHTML=Array.from({length:NEED[RUN.level]},(_,i)=>`<i class="${i<RUN.correct?"ok":""}"></i>`).join("");
+    const showStreak=max>0&&RUN.lamps<max;
+    $("streak").hidden=!showStreak;
+    $("streak").innerHTML=`Serie: ${Array.from({length:STREAK},(_,i)=>`<i class="${i<RUN.streak?"on":""}"></i>`).join("")} <span class="hint">${U(`${STREAK} giuste di fila riaccendono una lanterna`,`${STREAK} أجوبة صحيحة وحدة ورا وحدة كتشعل فانوس`)}</span>`;
+    $("practiceExit").hidden=true;$("practiceBtn").hidden=false;
+  }
+  $("minimap").innerHTML=mapSVG(RUN.pieces);
+  $("stars").innerHTML=RUN.stars.slice(0,4).map(starSVG).join("");
+  $("stars").setAttribute("aria-label",`Stelle: ${RUN.stars.filter(Boolean).length} tappe senza errori`);
+}
+function lampSVG(on){return `<svg viewBox="0 0 30 44" class="${on?"":"out"}" aria-label="${on?"lanterna accesa":"lanterna spenta"}"><rect x="9" y="2" width="12" height="5" rx="2" fill="#5a4630"/><path class="glass" d="M7,9 h16 l2,24 h-20 Z" fill="#ffe7a8" opacity=".5"/><path class="flame" d="M15,14 C19,19 19,25 15,28 C11,25 11,19 15,14 Z" fill="#ff9d2e"/><circle class="smoke" cx="15" cy="12" r="5" fill="#999" opacity="0"/><rect x="5" y="33" width="20" height="5" rx="2" fill="#5a4630"/><path d="M15,2 V0" stroke="#5a4630" stroke-width="2"/></svg>`}
+
+/* ================= salvataggio automatico ================= */
+function save(){
+  if(RUN.practice)return;
+  store.set("run",{level:RUN.level,variants:RUN.variants,seed:RUN.seed,pieces:RUN.pieces,correct:RUN.correct,lamps:RUN.lamps,streak:RUN.streak,levelErr:RUN.levelErr,stars:RUN.stars,helpsRun:RUN.helpsRun,log:RUN.log,used:[...RUN.used],t:Date.now()});
+}
+function clearSave(){try{localStorage.removeItem("mappa:run")}catch(e){}}
+
+/* ================= sovrapposizioni ================= */
+function overlay(html,btns){
+  if(typeof btns==="string")btns=[btns];btns=btns||[];
+  return new Promise(res=>{
+    $("ocard").innerHTML=html+(btns.length?`<div class="obtns">${btns.map((b,i)=>`<button class="btn ${i===0?"primary":""}" data-ob="${i}">${b}</button>`).join("")}</div>`:"");
+    $("ov").classList.add("on");
+    const first=$("ocard").querySelector("[data-ob]");
+    if(first)setTimeout(()=>first.focus(),300);
+    $("ocard").querySelectorAll("[data-ob]").forEach(b=>b.onclick=()=>{$("ov").classList.remove("on");setTimeout(()=>res(+b.dataset.ob),reduce?0:400)});
+    if(!btns.length)res(-1);
+  });
+}
+async function showLevelIntro(){
+  const L=LEVELS[RUN.level];
+  setScene(RUN.level);SND.level();
+  const e=CFG.errs[RUN.level];
+  await overlay(`<span class="kick">${LV(RUN.level,"kick")}</span><h2>${LV(RUN.level,"name")}</h2><p>${LV(RUN.level,"story")}</p>
+    <p class="hint">${RUN.level<4?U(`Servono ${NEED[RUN.level]} risposte giuste.`,`خاصكم ${NEED[RUN.level]} أجوبة صحيحة.`):U("Una sola domanda.","سؤال واحد بركة.")} ${e?U(`Lanterne accese: ${e}. ${STREAK} risposte giuste di fila riaccendono una lanterna spenta.`,`الفوانيس الشاعلين: ${e}. ${STREAK} أجوبة صحيحة وحدة ورا وحدة كتشعل فانوس طافي.`):U("Nessun errore consentito.","ممنوع الغلط.")}</p>`,RUN.level<4?U("In cammino","يالاه نمشيو"):U("Affronta l'enigma","واجه اللغز"));
+}
+
+/* ================= diario di viaggio ================= */
+function diaryHTML(compact){
+  const log=RUN.log.filter(e=>!e.practice);
+  if(!log.length)return `<p class="hint">Il diario è ancora vuoto: nessuna prova affrontata in questo viaggio.</p>`;
+  const rows=[0,1,2,3,4].map(lv=>{const e=log.filter(x=>x.lv===lv);if(!e.length)return "";const ok=e.filter(x=>x.ok).length,ko=e.length-ok,h=e.filter(x=>x.help).length;
+    return `<tr><td>${LEVELS[lv].name}${RUN.stars[lv]&&lv<4?` ${starSVG(true)}`:""}</td><td>${ok}</td><td>${ko}</td><td>${h}</td></tr>`}).join("");
+  const byTopic={};log.filter(e=>!e.ok).forEach(e=>{byTopic[e.topic]=byTopic[e.topic]||{n:0,typ:0};byTopic[e.topic].n++;if(e.typ)byTopic[e.topic].typ++});
+  const tops=Object.entries(byTopic).sort((a,b)=>b[1].n-a[1].n);
+  return `<div class="diary"><table><thead><tr><th>Tappa</th><th>Giuste</th><th>Errori</th><th>Aiuti</th></tr></thead><tbody>${rows}</tbody></table>
+    ${tops.length?`<p style="margin-top:.6rem"><b>Da ripassare:</b></p><ul>${tops.slice(0,compact?3:8).map(([t,v])=>`<li>${t}: ${v.n} ${v.n===1?"errore":"errori"}${v.typ?` (${v.typ} ${v.typ===1?"è un errore tipico":"sono errori tipici"})`:""}</li>`).join("")}</ul>`:`<p style="margin-top:.6rem">Nessun errore finora: ottimo cammino.</p>`}</div>`;
+}
+$("diaryBtn").onclick=async()=>{await overlay(`<span class="kick">Diario di viaggio</span><h2>Il cammino finora</h2>${diaryHTML(false)}<p class="hint">Il diario resta su questo dispositivo e si azzera quando la mappa vola via.</p>`,"Chiudi")};
+
+/* ================= flusso ================= */
+async function newRun(first){
+  newVariants();Object.assign(RUN,{level:0,pieces:0,stars:[false,false,false,false,false],helpsRun:0,log:[],practice:false});
+  if(first){
+    setScene(0);
+    const saved=store.get("run",null);
+    if(saved&&saved.level!==undefined){
+      const c=await overlay(`<span class="kick">${U("Bentornati","مرحبا بيكم من جديد")}</span><h2>${U("C'è un viaggio in sospeso","كاين واحد السفر ما كمّلش")}</h2><p>${U(`Eravate a ${LEVELS[saved.level].name}, con ${saved.pieces}/4 della mappa.`,`كنتو ف${LEVELS[saved.level].nameA}، وعندكم ${saved.pieces}/4 ديال الخريطة.`)}</p><svg class="bigmap" viewBox="0 0 100 100" aria-hidden="true">${mapSVG(saved.pieces)}</svg>`,[U("Riprendi il viaggio","كمّل السفر"),U("Nuovo viaggio","سفر جديد")]);
+      if(c===0){Object.assign(RUN,saved,{used:new Set(saved.used||[]),practice:false});return startLevel(true)}
+      clearSave();
+    }
+    await overlay(`<span class="kick">${U("Un viaggio tra le frazioni","سفر بين الكسور")}</span><h2>${U("La Mappa Spezzata","الخريطة المقطّعة")}</h2><p>${U(INTRO,INTRO_A)}</p><svg class="bigmap" viewBox="0 0 100 100" aria-hidden="true">${mapSVG(0)}</svg>`,U("Iniziamo","يالاه نبداو"));
+  }
+  startLevel();
+}
+async function startLevel(keep){
+  if(!keep){RUN.correct=0;RUN.lamps=CFG.errs[RUN.level];RUN.used=new Set();RUN.streak=0;RUN.levelErr=0}
+  renderHUD();$("stage").hidden=true;save();
+  await showLevelIntro();
+  $("stage").hidden=false;nextQ();
+}
+function pool(){return RUN.level<4?BANK.levels[RUN.level]:BANK.final}
+function nextQ(){
+  const P=pool();let free=P.map((_,i)=>i).filter(i=>!RUN.used.has(i));
+  if(!free.length){RUN.used.clear();free=P.map((_,i)=>i)}
+  // varietà: se possibile evita lo stesso tipo di prova due volte di fila
+  const lastType=RUN.q&&RUN.q.type;
+  const pickFrom=free.length>1?free:free;
+  let k,q,tries=0;
+  do{k=pickFrom[Math.floor(Math.random()*pickFrom.length)];q=P[k]();tries++}while(q.type===lastType&&tries<6&&free.length>2);
+  RUN.used.add(k);
+  if(q.opts)q.opts=shuffle(q.opts.slice());
+  q.topic=BANK.topics[RUN.level][k];q.k=k;
+  Object.assign(RUN,{q,sel:null,disabled:new Set(),buf:"",pairs:{},pick:null,shaded:new Set(),locked:false});
+  if(q.type==="match")RUN.right=shuffle(q.pairs.map((_,j)=>j));
+  const L=LEVELS[RUN.level];$("qtag").innerHTML=RUN.practice?U(`${L.tag} · allenamento`,`${L.tagA} · تمرين`):U(`${L.tag} · ${RUN.level<4?`prova ${RUN.correct+1} di 4`:"una sola possibilità"}`,`${L.tagA} · ${RUN.level<4?`التمرين ${RUN.correct+1} من 4`:"فرصة وحدة"}`);
+  $("q").innerHTML=q.q;$("fb").hidden=true;$("next").hidden=true;
+  const helpOn=RUN.practice||CFG.help==="all"||(CFG.help==="nofinal"&&RUN.level<4);
+  $("helpbtn").hidden=!helpOn||!q.help;$("helpbtn").disabled=false;$("helpbtn").setAttribute("aria-expanded","false");$("helpbox").hidden=true;
+  renderBody();renderHUD();save();
+}
+function readyAns(){const q=RUN.q;if(RUN.locked)return false;switch(q.type){case"input":return RUN.buf.length>0;case"match":return Object.keys(RUN.pairs).length===q.pairs.length;case"shade":return RUN.shaded.size>0;default:return RUN.sel!==null}}
+function renderBody(){
+  const q=RUN.q,b=$("body"),L=RUN.locked;
+  if(q.type==="mc"){
+    b.innerHTML=`<div class="opts ${q.one||q.opts.length===2?"one":""}">${q.opts.map((o,j)=>`<button class="opt ${L&&o[1]?"yes":""} ${L&&RUN.sel===j&&!o[1]?"no":""}" data-j="${j}" aria-pressed="${RUN.sel===j}" ${L?"disabled":""}>${o[0]}</button>`).join("")}</div>`;
+  }else if(q.type==="err"){
+    b.innerHTML=`<div class="steps">${q.steps.map((s,j)=>`<button class="stepb ${L&&j===q.wrong?"yes":""}" data-j="${j}" aria-pressed="${RUN.sel===j}" ${L?"disabled":""}>${s}</button>`).join("")}</div><p class="hint">${U("Tocca il passaggio sbagliato.","ضغط على الخطوة الغالطة.")}</p>`;
+  }else if(q.type==="input"){
+    b.innerHTML=`<div class="inp"><output aria-live="polite">${RUN.buf||"&nbsp;"}</output><div class="pad">${["1","2","3","4","5","6","7","8","9","0","/"].map(k=>`<button data-key="${k}" ${L?"disabled":""}>${k}</button>`).join("")}<button class="wide" data-key="del" ${L?"disabled":""}>Cancella</button></div></div><p class="hint">${U("Per una frazione usa la barra: per esempio 3/4.","باش تكتب كسر استعمل الخط المايل: مثلا 3/4.")}</p>`;
+  }else if(q.type==="match"){
+    const keys=Object.keys(RUN.pairs);
+    const lt=j=>keys.includes(String(j))?`p${keys.indexOf(String(j))}`:"";
+    const rt=j=>{const k=keys.find(k=>RUN.pairs[k]===j);return k===undefined?"":`p${keys.indexOf(k)}`};
+    b.innerHTML=`<div class="match"><div class="col">${q.pairs.map((p,j)=>`<button class="mi ${lt(j)}" data-l="${j}" aria-pressed="${RUN.pick===j}" ${L?"disabled":""}>${p[0]}${lt(j)?`<span class="tag ${lt(j)}">${"ABC"[+lt(j).slice(1)]}</span>`:""}</button>`).join("")}</div><div class="col">${RUN.right.map(j=>`<button class="mi ${rt(j)}" data-r="${j}" ${L?"disabled":""}>${q.pairs[j][1]}${rt(j)?`<span class="tag ${rt(j)}">${"ABC"[+rt(j).slice(1)]}</span>`:""}</button>`).join("")}</div></div><p class="hint">${U("Tocca un elemento a sinistra, poi quello che gli corrisponde a destra.","ضغط على شي حاجة على اليسار، من بعد على اللي كتناسبها على اليمين.")}</p>`;
+  }else if(q.type==="shade"){
+    b.innerHTML=shadeSVG(q)+`<p class="hint">${U(`Tocca le parti per colorarle; tocca di nuovo per togliere il colore. Colorate: ${RUN.shaded.size} su ${q.d}.`,`ضغط على الطراف باش تلوّنهم؛ عاود ضغط باش تحيّد اللون. ملوّنين: ${RUN.shaded.size} من ${q.d}.`)}</p>`;
+  }else if(q.type==="line"){
+    b.innerHTML=lineSVG(q);
+  }
+  $("confirm").disabled=!readyAns();$("confirm").hidden=RUN.locked;
+}
+function shadeSVG(q){
+  if(q.shape==="pie"){const s=260,r=120,c=130;let p="";for(let i=0;i<q.d;i++){const a0=-Math.PI/2+i*2*Math.PI/q.d,a1=a0+2*Math.PI/q.d;p+=`<path class="part" data-p="${i}" d="M${c},${c} L${(c+r*Math.cos(a0)).toFixed(1)},${(c+r*Math.sin(a0)).toFixed(1)} A${r},${r} 0 0 1 ${(c+r*Math.cos(a1)).toFixed(1)},${(c+r*Math.sin(a1)).toFixed(1)} Z" fill="${RUN.shaded.has(i)?"var(--shade)":"var(--blank)"}" stroke="var(--ink)" stroke-width="3"/>`}
+    return `<svg class="inter" viewBox="0 0 ${s} ${s}" width="${s}">${p}<circle cx="${c}" cy="${c}" r="10" fill="var(--ink)"/></svg>`}
+  const w=640,h=120,pw=(w-6)/q.d;let p="";for(let i=0;i<q.d;i++)p+=`<rect class="part" data-p="${i}" x="${3+i*pw}" y="3" width="${pw}" height="${h}" fill="${RUN.shaded.has(i)?"var(--shade)":"var(--blank)"}" stroke="var(--ink)" stroke-width="3"/>`;
+  return `<svg class="inter" viewBox="0 0 ${w} ${h+6}" width="${w}">${p}</svg>`;
+}
+function lineSVG(q){
+  const W=900,X0=50,X1=850,Y=70,n=q.max*q.sub;let s=`<line x1="${X0-20}" y1="${Y}" x2="${X1+20}" y2="${Y}" stroke="var(--ink)" stroke-width="4"/>`;
+  for(let k=0;k<=n;k++){const x=X0+(X1-X0)*k/n,major=k%q.sub===0,sel=RUN.sel===k,locked=RUN.locked&&k*q.target[1]===q.target[0]*q.sub;
+    if(locked)s+=`<circle cx="${x}" cy="${Y}" r="20" fill="var(--ok)" opacity=".4"/>`;
+    s+=`<g class="tick" data-k="${k}"><rect x="${x-18}" y="${Y-40}" width="36" height="80" fill="transparent"/><line x1="${x}" y1="${Y-(major?26:16)}" x2="${x}" y2="${Y+(major?26:16)}" stroke="var(--ink)" stroke-width="${major?4:2.5}"/>${sel?`<circle cx="${x}" cy="${Y}" r="12" fill="var(--accent)"/>`:""}</g>`;
+    if(major)s+=`<text x="${x}" y="${Y+56}" text-anchor="middle" font-size="24" font-weight="700" fill="var(--ink)" font-family="Atkinson Hyperlegible, Verdana, sans-serif">${k/q.sub}</text>`;}
+  return `<svg class="inter" viewBox="0 0 ${W} 140" width="${W}">${s}</svg><p class="hint">${U(`Tocca la tacca giusta. Ogni tratto vale ${q.sub===1?"1":"1/"+q.sub}.`,`ضغط على العلامة الصحيحة. كل طرف كيسوى ${q.sub===1?"1":"1/"+q.sub}.`)}</p>`;
+}
+$("body").addEventListener("click",e=>{
+  if(RUN.locked)return;
+  const o=e.target.closest("[data-j]");if(o){RUN.sel=+o.dataset.j;return renderBody()}
+  const k=e.target.closest("[data-key]");if(k){const v=k.dataset.key;if(v==="del")RUN.buf=RUN.buf.slice(0,-1);else if(RUN.buf.length<7)RUN.buf+=v;return renderBody()}
+  const l=e.target.closest("[data-l]");if(l){const j=+l.dataset.l;delete RUN.pairs[j];RUN.pick=j;return renderBody()}
+  const r=e.target.closest("[data-r]");if(r&&RUN.pick!==null){const j=+r.dataset.r;for(const kk in RUN.pairs)if(RUN.pairs[kk]===j)delete RUN.pairs[kk];RUN.pairs[RUN.pick]=j;RUN.pick=null;return renderBody()}
+  const p=e.target.closest("[data-p]");if(p){const i=+p.dataset.p;RUN.shaded.has(i)?RUN.shaded.delete(i):RUN.shaded.add(i);return renderBody()}
+  const t=e.target.closest("[data-k]");if(t){RUN.sel=+t.dataset.k;return renderBody()}
+});
+function parseAns(s){const m=s.match(/^(\d+)(?:\/(\d+))?$/);if(!m)return null;const n=+m[1],d=m[2]===undefined?1:+m[2];return d>0?[n,d]:null}
+function evaluate(){
+  const q=RUN.q;
+  switch(q.type){
+    case"mc":{const o=q.opts[RUN.sel];return o[1]?{ok:true}:{ok:false,why:o[2]||""}}
+    case"err":return RUN.sel===q.wrong?{ok:true}:{ok:false,why:U("Il passaggio che hai scelto è corretto.","الخطوة اللي اخترتي صحيحة.")};
+    case"input":{const a=parseAns(RUN.buf);if(!a)return{ok:false,why:U("Scrivi un numero intero oppure una frazione come 3/4.","كتب عدد صحيح ولا كسر بحال 3/4.")};
+      const same=a[0]*q.ans[1]===q.ans[0]*a[1];
+      if(same&&q.reduce&&gcd(a[0],a[1])!==1)return{ok:false,why:U("Il valore è giusto, ma la frazione va ridotta ai minimi termini.","القيمة صحيحة، ولكن خاص الكسر يتبسّط حتى لآخر.")};
+      if(same)return{ok:true};
+      const trap=(q.traps||[]).find(([v])=>v[1]>0&&a[0]*v[1]===v[0]*a[1]);
+      if(trap)return{ok:false,typ:true,why:`<span class="typ">Errore tipico · غلط معروف</span> ${trap[1]}`};
+      return{ok:false,why:U(`Hai scritto ${RUN.buf}.`,`كتبتي <bdi>${RUN.buf}</bdi>.`)}}
+    case"match":{const w=Object.keys(RUN.pairs).filter(k=>RUN.pairs[k]!==+k);return w.length?{ok:false,why:U("Qualche abbinamento non è giusto.","شي ربط ماشي صحيح.")}:{ok:true}}
+    case"shade":{const n=RUN.shaded.size;return n*q.target[1]===q.target[0]*q.d?{ok:true}:{ok:false,why:U(`Hai colorato ${n} parti su ${q.d}.`,`لوّنتي ${n} طراف من ${q.d}.`)}}
+    case"line":{const k=RUN.sel;return k*q.target[1]===q.target[0]*q.sub?{ok:true}:{ok:false,why:U("La tacca scelta non è quella giusta.","العلامة اللي اخترتي ماشي هي الصحيحة.")}}
+  }
+}
+function fx(kind){const f=$("flash");f.className="";void f.offsetWidth;f.className=kind;if(kind==="bad"){const a=$("app");a.classList.remove("shake");void a.offsetWidth;a.classList.add("shake")}}
+function showFb(kind,html){$("fb").className="fb "+kind;$("fb").innerHTML=html;$("fb").hidden=false}
+function showNext(text,fn){$("next").innerHTML=text;$("next").hidden=false;$("next").onclick=fn;$("next").focus()}
+$("confirm").onclick=async()=>{
+  if(!readyAns())return;
+  const q=RUN.q,r=evaluate();RUN.locked=true;
+  if(q.type==="match"&&!r.ok)RUN.pairs=Object.fromEntries(q.pairs.map((_,j)=>[j,j]));
+  renderBody();
+  RUN.log.push({lv:RUN.level,topic:q.topic,ok:r.ok,help:!!q.helpUsed,typ:!!r.typ,practice:RUN.practice});
+  const ansT=q.ans?(q.ans[1]===1?q.ans[0]:q.ans[0]+"/"+q.ans[1]):"";const sol=q.type==="input"&&!r.ok?U(`La risposta giusta è ${ansT}.`,`الجواب الصحيح هو <bdi>${ansT}</bdi>.`):"";
+  /* --- allenamento: niente lanterne, si va avanti --- */
+  if(RUN.practice){
+    RUN.pcount[r.ok?0:1]++;fx(r.ok?"good":"bad");r.ok?SND.ok():SND.bad();renderHUD();
+    showFb(r.ok?"ok":"bad",r.ok?`<b class="t">${U("Giusto!","صحيح!")}</b>${q.ex}`:`<b class="t">${U("Da rivedere.","خاصها مراجعة.")}</b>${r.why}${sol}${q.ex}`);
+    showNext(U("Altra prova","تمرين آخر"),nextQ);return;
+  }
+  if(r.ok){
+    RUN.correct++;RUN.streak++;fx("good");SND.ok();
+    let extra="";
+    const max=CFG.errs[RUN.level];
+    if(RUN.streak>=STREAK&&RUN.lamps<max){RUN.lamps++;RUN.streak=0;extra=`<b>${U(`${STREAK} risposte giuste di fila: una lanterna si riaccende!`,`${STREAK} أجوبة صحيحة وحدة ورا وحدة: فانوس تشعل من جديد!`)}</b>`;setTimeout(()=>{SND.relit();const l=$("lanterns").querySelectorAll("svg")[RUN.lamps-1];if(l)l.classList.add("relit")},350)}
+    else if(RUN.lamps>=max)RUN.streak=0; // con tutte le lanterne accese la serie non si accumula
+    renderHUD();
+    showFb("ok",`<b class="t">${U("Giusto!","صحيح!")}</b>${q.ex}${extra}`);
+    const done=RUN.correct>=NEED[RUN.level];
+    showNext(done?(RUN.level<4?U("Prendi il pezzo di mappa","خود الطرف ديال الخريطة"):U("Apri la porta","حل الباب")):U("Prossima prova","التمرين الجاي"),done?levelDone:nextQ);
+    save();return;
+  }
+  RUN.streak=0;RUN.levelErr++;fx("bad");SND.bad();
+  if(RUN.lamps>0){
+    RUN.lamps--;
+    const lamp=$("lanterns").querySelectorAll("svg")[RUN.lamps];
+    if(lamp){lamp.classList.add("dying");setTimeout(renderHUD,reduce?0:1000)}else renderHUD();
+    showFb("bad",`<b class="t">${U("Una lanterna si spegne.","فانوس طفى.")}</b>${r.why}${sol}${q.ex}<span class="hint">${U(`Lanterne ancora accese: ${RUN.lamps}.`,`الفوانيس اللي باقيين شاعلين: ${RUN.lamps}.`)}</span>`);
+    showNext(U("Prossima prova","التمرين الجاي"),nextQ);save();return;
+  }
+  showFb("bad",`<b class="t">${CFG.errs[RUN.level]?U("Le lanterne sono tutte spente.","الفوانيس طفاو كاملين."):U("L'enigma non è risolto.","اللغز ما تحلّش.")}</b>${r.why}${sol}${q.ex}`);
+  showNext(U("Continua","كمّل"),lost);
+};
+async function lost(){
+  SND.lost();
+  const zero=CFG.restart==="zero";
+  await overlay(`<span class="kick">${U("Una folata di vento…","ضربة ديال الريح…")}</span><h2>${U("La mappa vola via","الخريطة طارت")}</h2>
+    <svg class="bigmap" viewBox="0 0 100 100" aria-hidden="true">${mapSVG(RUN.pieces,"out")}</svg>
+    <p>${zero?U("Si torna al Porto delle Vele. Le prove saranno diverse e anche il paesaggio non sarà più lo stesso.","كنرجعو لمرسى الشرايط. التمارين غادي يكونو جداد وحتى المنظر غادي يتبدّل."):U(`Si riparte dall'inizio di ${LEVELS[RUN.level].name}, con prove nuove.`,`كنعاودو من الأول ديال ${LEVELS[RUN.level].nameA}، بتمارين جداد.`)}</p>
+    <details class="odiary"><summary>Diario di questo viaggio</summary>${diaryHTML(true)}</details>`,U("Ricominciamo","نعاودو"));
+  if(zero){newVariants();Object.assign(RUN,{level:0,pieces:0,stars:[false,false,false,false,false],helpsRun:0,log:[]})}
+  else{const v=RUN.variants.slice();v[RUN.level]=(v[RUN.level]+1+Math.floor(Math.random()*3))%4;RUN.variants=v;RUN.seed=Math.floor(Math.random()*1e9)}
+  startLevel();
+}
+async function levelDone(){
+  const clean=RUN.levelErr===0;
+  if(clean)RUN.stars[RUN.level]=true;
+  if(RUN.level===4)return victory();
+  RUN.pieces++;SND.level();
+  renderHUD();
+  await overlay(`<span class="kick">${U(`${LEVELS[RUN.level].name}: superata`,`${LEVELS[RUN.level].nameA}: دوزتوها`)}</span><h2>${U(`Pezzo di mappa n. ${RUN.pieces}`,`الطرف رقم ${RUN.pieces} ديال الخريطة`)}</h2>
+    <svg class="bigmap" viewBox="0 0 100 100" aria-hidden="true">${mapSVG(RUN.pieces,"in")}</svg>
+    ${clean?`<div class="bigstar">${starSVG(true)}<span>${U("Tappa senza errori: una stella!","مرحلة بلا غلط: نجمة!")}</span></div>`:""}
+    <p>${U(`Avete ${RUN.pieces}/4 della mappa${RUN.pieces===2?", cioè metà":RUN.pieces===4?": la mappa è intera":""}.`,`عندكم ${RUN.pieces}/4 ديال الخريطة${RUN.pieces===2?"، يعني النص":RUN.pieces===4?": الخريطة كاملة":""}.`)}</p>`,RUN.pieces<4?U("Prosegui il viaggio","كمّل السفر"):U("Verso la Torre","نحو البرج"));
+  RUN.level++;startLevel();
+}
+async function victory(){
+  SND.win();confetti();clearSave();
+  const stars=RUN.stars.slice(0,4).filter(Boolean).length,medal=RUN.helpsRun===0;
+  await overlay(`<span class="kick">${U("Meta raggiunta","وصلتو")}</span><h2>${U("L'Osservatorio è vostro!","المرصد ديالكم!")}</h2>
+    <svg class="bigmap" viewBox="0 0 100 100" aria-hidden="true">${mapSVG(4)}</svg>
+    <p>${U("Dal porto alla Torre dei Venti: quattro tappe, una mappa ricomposta (4/4 = 1 intero) e l'enigma del custode risolto.","من المرسى حتى لبرج الرياح: ربعة ديال المراحل، خريطة كاملة (4/4 = 1) واللغز ديال العسّاس تحلّ.")}</p>
+    <div class="awards"><div>${RUN.stars.slice(0,4).map(starSVG).join("")}<br><span>${U(`${stars} ${stars===1?"stella":"stelle"} su 4`,`${stars} نجوم من 4`)}</span></div>
+    ${medal?`<div class="medal"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 2h8l2 12-6 4zM34 2h-8l-2 12 6 4z" fill="#2f62b0"/><circle cx="24" cy="30" r="14" fill="#d79a2b" stroke="#9c6a14" stroke-width="3"/><path d="M24 22l2.6 5.3 5.8.8-4.2 4 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.2-4 5.8-.8z" fill="#fff4d0"/></svg><span>${U("Medaglia del Cartografo: viaggio completato senza aiuti","ميدالية الرسّام: كمّلتو السفر بلا مساعدة")}</span></div>`:""}</div>
+    <details class="odiary" open><summary>Diario di viaggio</summary>${diaryHTML(false)}</details>`,U("Un nuovo viaggio","سفر جديد"));
+  newRun(false);
+}
+function confetti(){
+  if(reduce)return;const c=$("conf");c.hidden=false;const x=c.getContext("2d");c.width=innerWidth;c.height=innerHeight;
+  const cols=["#d79a2b","#9c4a1a","#2e7d4a","#2f62b0","#c2412d","#f2c063"];
+  const P=Array.from({length:160},()=>({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:-2+Math.random()*4,vy:2+Math.random()*4,s:5+Math.random()*7,r:Math.random()*6,c:cols[Math.floor(Math.random()*cols.length)]}));
+  const t0=performance.now();
+  (function f(t){x.clearRect(0,0,c.width,c.height);for(const p of P){p.x+=p.vx;p.y+=p.vy;p.r+=.1;x.save();x.translate(p.x,p.y);x.rotate(p.r);x.fillStyle=p.c;x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);x.restore()}
+    if(t-t0<4500)requestAnimationFrame(f);else{x.clearRect(0,0,c.width,c.height);c.hidden=true}})(t0);
+}
+
+/* ================= allenamento libero ================= */
+$("practiceBtn").onclick=async()=>{
+  const c=await overlay(`<span class="kick">${U("Allenamento libero","تمرين حر")}</span><h2>${U("Su quale tappa vi allenate?","على أشمن مرحلة بغيتو تتمرّنو؟")}</h2>
+    <p>${U("Prove senza lanterne e senza fretta, con gli aiuti sempre disponibili. Il viaggio in corso resta salvato: quando uscite dall'allenamento riprende da dove era.","تمارين بلا فوانيس وبلا زربة، والمساعدة ديما كاينة. السفر ديالكم كيبقى محفوظ: ملي تخرجو من التمرين كيكمّل من فين حبس.")}</p>`,
+    LEVELS.slice(0,4).map((L,i)=>U(`${i+1} · ${L.name}`,`${i+1} · ${L.nameA}`)).concat([U("Annulla","رجوع")]));
+  if(c<0||c>3)return;
+  save();
+  RUN.saved={level:RUN.level,pieces:RUN.pieces,correct:RUN.correct,lamps:RUN.lamps,streak:RUN.streak,levelErr:RUN.levelErr,used:new Set(RUN.used),q:RUN.q};
+  Object.assign(RUN,{practice:true,level:c,pcount:[0,0],used:new Set(),q:null});
+  setScene(c);$("stage").hidden=false;nextQ();
+};
+$("practiceExit").onclick=()=>{
+  const s=RUN.saved;RUN.practice=false;
+  if(s){Object.assign(RUN,{level:s.level,pieces:s.pieces,correct:s.correct,lamps:s.lamps,streak:s.streak,levelErr:s.levelErr,used:s.used})}
+  setScene(RUN.level);renderHUD();nextQ();
+};
+
+/* ================= lettura ad alta voce e aiuto ================= */
+function sayText(el){const c=el.cloneNode(true);c.querySelectorAll("[data-say]").forEach(n=>n.replaceWith(" "+n.dataset.say+" "));c.querySelectorAll(".no-say,.ar").forEach(n=>n.remove());return c.textContent.replace(/\s+/g," ").trim()}
+$("read").onclick=()=>{try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(sayText($("q"))+($("helpbox").hidden?"":". "+sayText($("helpbox"))));u.lang="it-IT";u.rate=.92;speechSynthesis.speak(u)}catch(e){}};
+if(!("speechSynthesis" in window))$("read").hidden=true;
+$("helpbtn").onclick=()=>{const q=RUN.q;if(!q||!q.help||RUN.locked)return;q.helpUsed=true;if(!RUN.practice)RUN.helpsRun++;const box=$("helpbox");box.innerHTML=`<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" style="flex:none"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V16h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="flex:1"><b>${U("Uno spunto","فكرة")}</b> ${q.help}</span>`;box.hidden=false;$("helpbtn").disabled=true;$("helpbtn").setAttribute("aria-expanded","true");tone(880,0,.2,"sine",.1);save()};
+/* etichette dei pulsanti fissi, in italiano e darija */
+(function(){const set=(id,it,ar)=>{const e=$(id);const svg=e.querySelector("svg");e.innerHTML=(svg?svg.outerHTML:"")+U(it,ar)};
+  set("read","Leggi la domanda","قرا السؤال (بالطاليانية)");set("big","Testo grande","كتابة كبيرة");set("snd","Suoni","الصوت");
+  set("diaryBtn","Diario di viaggio","دفتر السفر");set("practiceBtn","Allenamento","تمرين");set("practiceExit","Torna al viaggio","رجع للسفر");
+  set("helpbtn","Un aiuto","مساعدة");set("confirm","Conferma","أكّد");})();
+loadCfgUI();
+newRun(true);
+</script>
+
+</body></html>

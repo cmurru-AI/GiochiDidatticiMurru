@@ -4,12 +4,43 @@
     "titolo": "Gioco di prova",
     "tipo": "gioco",
     "materia": "matematica",
-    "destinatari": ["studenti"],
+    "destinatari": [
+      "studenti"
+    ],
     "descrizione": "Il primo gioco pubblicato su Officina Didattica.",
     "percorso": "giochi/primo-gioco/",
     "autore": "Carlo Murru",
     "stato": "pubblicato",
     "dataPubblicazione": "2026-10-24",
-    "paroleChiave": ["matematica", "tabelline", "moltiplicazioni"]
+    "paroleChiave": [
+      "matematica",
+      "tabelline",
+      "moltiplicazioni"
+    ]
+  },
+  {
+    "id": "la-mappa-spezzata",
+    "titolo": "La Mappa Spezzata",
+    "tipo": "gioco",
+    "materia": "matematica",
+    "classe": [
+      "2-secondaria"
+    ],
+    "destinatari": [
+      "studenti"
+    ],
+    "descrizione": "Un viaggio in quattro tappe e un enigma finale per ricomporre la mappa: frazioni, equivalenze, operazioni e problemi.",
+    "percorso": "giochi/la-mappa-spezzata/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-25",
+    "paroleChiave": [
+      "frazioni",
+      "frazioni equivalenti",
+      "operazioni con le frazioni",
+      "numeri misti",
+      "problemi",
+      "darija"
+    ]
   }
 ]
