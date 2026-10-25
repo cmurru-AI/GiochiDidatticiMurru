@@ -2,7 +2,8 @@
 //
 // Uso in una pagina:
 //   <div class="game-grid" data-catalogo="gioco" data-limite="3" data-segnaposto="3"></div>
-//   <div class="filters" data-filtri></div>   (facoltativo: filtri per scuola, classe, materia)
+//   <div class="filters" data-filtri></div>   (facoltativo: filtri per destinatari, scuola, classe, materia)
+//   La pagina accetta filtri iniziali dall'indirizzo, es. giochi/?per=studenti
 (function () {
   // Radice del sito, ricavata dalla posizione di questo file (assets/js/)
   var RADICE = new URL("../../", document.currentScript.src);
@@ -70,6 +71,12 @@
 
   function classiDi(voce) {
     return Array.isArray(voce.classe) ? voce.classe : [];
+  }
+
+  // Un materiale per entrambi ha i due valori; "entrambi" resta accettato per compatibilità
+  function destinatariDi(voce) {
+    var d = Array.isArray(voce.destinatari) ? voce.destinatari : [];
+    return d.indexOf("entrambi") !== -1 ? ["studenti", "docenti"] : d;
   }
 
   function valida(voce, tipo) {
@@ -152,13 +159,17 @@
   // ---------- Filtri: scuola, classe, materia ----------
 
   function avviaFiltri(contenitore, griglia, voci) {
-    var scelta = { scuola: "", classe: "", materia: "" };
+    var CHIAVI = ["per", "scuola", "classe", "materia"];
+    var parametri = new URLSearchParams(location.search);
+    var scelta = {};
+    CHIAVI.forEach(function (k) { scelta[k] = parametri.get(k) || ""; });
     var conteggio = crea("p", "filters-count");
     conteggio.setAttribute("aria-live", "polite");
 
     function corrisponde(voce, salta) {
       var classi = classiDi(voce);
-      return (salta === "scuola" || !scelta.scuola || classi.some(function (c) {
+      return (salta === "per" || !scelta.per || destinatariDi(voce).indexOf(scelta.per) !== -1) &&
+        (salta === "scuola" || !scelta.scuola || classi.some(function (c) {
           return leggiClasse(c).scuola === scelta.scuola;
         })) &&
         (salta === "classe" || !scelta.classe || classi.indexOf(scelta.classe) !== -1) &&
@@ -172,6 +183,7 @@
         return chiave === "classe" ? corrisponde(v, "classe") : true;
       }).forEach(function (v) {
         if (chiave === "materia" && v.materia) trovati[v.materia] = true;
+        if (chiave === "per") destinatariDi(v).forEach(function (d) { trovati[d] = true; });
         classiDi(v).forEach(function (c) {
           if (chiave === "classe" && (!scelta.scuola || leggiClasse(c).scuola === scelta.scuola)) trovati[c] = true;
           if (chiave === "scuola") trovati[leggiClasse(c).scuola] = true;
@@ -180,10 +192,12 @@
       var elenco = Object.keys(trovati);
       if (chiave === "scuola") return ordinaScuole(elenco);
       if (chiave === "classe") return ordinaClassi(elenco);
+      if (chiave === "per") return ["studenti", "docenti"].filter(function (d) { return trovati[d]; });
       return elenco.sort();
     }
 
     var GRUPPI = [
+      { chiave: "per", titolo: "Per chi", tutti: "Tutti", nome: etichetta },
       { chiave: "scuola", titolo: "Scuola", tutti: "Tutte", nome: etichetta },
       { chiave: "classe", titolo: "Classe", tutti: "Tutte", nome: etichettaClasse },
       { chiave: "materia", titolo: "Materia", tutti: "Tutte", nome: etichetta }
@@ -225,7 +239,16 @@
       contenitore.appendChild(conteggio);
     }
 
+    // Riporta i filtri scelti nell'indirizzo, così la pagina si può condividere
+    function salvaIndirizzo() {
+      var p = new URLSearchParams();
+      CHIAVI.forEach(function (k) { if (scelta[k]) p.set(k, scelta[k]); });
+      var query = p.toString();
+      history.replaceState(null, "", location.pathname + (query ? "?" + query : ""));
+    }
+
     function aggiorna() {
+      salvaIndirizzo();
       var risultato = voci.filter(function (v) { return corrisponde(v); });
       disegna();
       conteggio.textContent = risultato.length === 1
