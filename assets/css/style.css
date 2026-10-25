@@ -240,14 +240,6 @@ nav a[aria-current="page"]::after {
   background: var(--giallo);
 }
 
-.button.status {
-  background: transparent;
-  color: var(--bianco);
-  border-color: var(--bianco);
-  border-style: dashed;
-  cursor: default;
-}
-
 /* HERO VISUAL */
 
 .hero-visual {

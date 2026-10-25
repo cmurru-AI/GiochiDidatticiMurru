@@ -276,6 +276,7 @@ Usare valori coerenti e stabili, ad esempio:
 `musica`
 `interdisciplinare`
 Aggiungere nuovi valori solo quando serve realmente.
+Campo facoltativo `rubrica`: nome della rubrica a cui appartiene un articolo o report (es. `"IA in classe"`); compare sulla card al posto del tipo.
 ---
 13. Workflow Git e pubblicazione
 Principio generale:
@@ -406,6 +407,30 @@ revisione di Carlo
 pubblicazione
 ```
 Solo dopo una fase di verifica può essere valutata una pubblicazione automatica per contenuti specifici e a basso rischio.
+
+Rubrica “IA in classe” (decisione di Carlo, ottobre 2026)
+Uscita settimanale. Ogni uscita contiene:
+3 novità su IA e scuola della settimana, ognuna con sintesi originale, riquadro “Perché interessa a scuola” e fonte con link e data;
+1 sezione pratica, a settimane alterne “Il prompt pronto” o “Lo strumento da provare” (cos’è, costo, età minima, privacy, idea per la classe).
+Oltre alle uscite settimanali, Carlo può chiedere un “flash” su una notizia importante.
+Titolo: la notizia principale della settimana. Etichetta: “IA in classe · data”. Niente numerazione.
+Fonti: scelte ogni volta tra fonti affidabili (istituzioni, produttori degli strumenti, testate riconosciute); esclusi blog anonimi, siti che copiano notizie altrui e contenuti sponsorizzati.
+Verifica: ogni notizia va controllata aprendo la fonte originale (testo di legge, rapporto, comunicato). Se la fonte non si apre o non conferma, la notizia non si pubblica. Segnalare nel testo gli errori che circolano, quando la verifica li fa emergere.
+Trasparenza: ogni uscita termina con la nota «Officina Didattica · Carlo Murru. Le notizie sono state cercate, verificate sulle fonti originali e sintetizzate con il supporto dell’intelligenza artificiale; l’autore le ha scelte, riviste e approvate prima della pubblicazione. Testo con licenza CC BY 4.0.»
+Immagini: solo grafiche create per il sito (copertina SVG in `assets/copertine/`, grafici SVG quando i dati lo meritano), con testo alternativo. Mai immagini prese dalle fonti. Eventuali foto di Carlo: nessun volto, nome o dato degli studenti.
+Pagina: `ia-didattica/ia-in-classe-AAAA-MM-GG/index.html`, sul modello delle uscite già pubblicate; voce nel catalogo con `tipo: "report"` e `rubrica: "IA in classe"`.
+Flusso:
+```text
+ricerca e verifica delle fonti
+↓
+bozza come documento Google in Drive: Officina Didattica / ia-didattica-bozze
+↓
+revisione di Carlo (correzioni direttamente nel documento)
+↓
+Carlo scrive «pubblica report»
+↓
+pagina, catalogo, pull request e merge (autorizzato da Carlo per questa rubrica)
+```
 ---
 19. Modalità di lavoro
 Prima di modificare il repository:
