@@ -56,11 +56,6 @@ margin-bottom:20px;
 font-size:20px;
 }
 
-#timer{
-font-size:26px;
-color:#ffd700;
-}
-
 .progress{
 
 height:20px;
@@ -183,7 +178,6 @@ font-size:28px;
 
 <div>❤️ <span id="lives">3</span></div>
 
-<div>⏱️ <span id="timer">20</span></div>
 
 </div>
 
@@ -316,8 +310,6 @@ c:1
 let current=0;
 let score=0;
 let lives=3;
-let timer=20;
-let interval;
 
 const worlds=document.querySelectorAll(".world");
 
@@ -333,7 +325,6 @@ document.getElementById("badgeContainer")
 
 function loadQuestion(){
 
-clearInterval(interval);
 
 if(current>=questions.length){
 victory();
@@ -362,27 +353,6 @@ ${ans}
 
 document.getElementById("answers")
 .innerHTML=html;
-
-timer=20;
-document.getElementById("timer")
-.textContent=timer;
-
-interval=setInterval(()=>{
-
-timer--;
-
-document.getElementById("timer")
-.textContent=timer;
-
-if(timer<=0){
-
-clearInterval(interval);
-
-wrong();
-
-}
-
-},1000);
 
 updateExp();
 
@@ -459,7 +429,6 @@ document.getElementById("exp")
 
 function gameOver(){
 
-clearInterval(interval);
 
 document.querySelector(".game").innerHTML=`
 
@@ -483,7 +452,6 @@ Ricomincia
 
 function victory(){
 
-clearInterval(interval);
 
 badge("👑 Campione delle Frazioni");
 
