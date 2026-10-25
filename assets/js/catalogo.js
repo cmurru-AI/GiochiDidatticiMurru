@@ -133,14 +133,14 @@
     // Articoli e report: tipo e data al posto di materia e classe
     if (voce.tipo !== "gioco") {
       return {
-        tag: [etichetta(voce.tipo), dataEstesa(voce.dataPubblicazione)].filter(Boolean).join(" · "),
+        tag: [voce.rubrica || etichetta(voce.tipo), dataEstesa(voce.dataPubblicazione)].filter(Boolean).join(" · "),
         titolo: voce.titolo,
         descrizione: voce.descrizione,
         percorso: voce.percorso,
         copertina: voce.copertina,
         azione: "Leggi →",
-        // Il numero del report viene dal suo id (es. ia-in-classe-01), non dalla posizione
-        numero: (/-(\d+)$/.exec(voce.id) || [])[1]
+        // Senza copertina, al posto del numero compare la data (es. 25.10)
+        numero: (voce.dataPubblicazione || "").split("-").reverse().slice(0, 2).join(".")
       };
     }
     var parti = [voce.materia ? etichetta(voce.materia) : "Gioco"];

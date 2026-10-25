@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-labelledby="t">
-  <title id="t">IA in classe, report numero 1: decreto IA, docenti, Europa</title>
+  <title id="t">IA in classe, 25 ottobre 2026: decreto IA, docenti, Europa</title>
   <rect width="1200" height="630" fill="#111111"/>
   <rect x="790" y="-60" width="150" height="430" fill="#7cff6b" stroke="#111111" stroke-width="4" transform="rotate(-14 865 155)"/>
   <circle cx="1075" cy="150" r="110" fill="#ff3d81" stroke="#111111" stroke-width="4"/>
@@ -7,8 +7,8 @@
   <rect x="660" y="430" width="190" height="200" fill="#3155ff" stroke="#111111" stroke-width="4"/>
   <g font-family="Arial, Helvetica, sans-serif" font-weight="900">
     <text x="70" y="110" fill="#7cff6b" font-size="30" letter-spacing="4">IA IN CLASSE</text>
-    <text x="64" y="285" fill="#ffffff" font-size="128" letter-spacing="-4">REPORT</text>
-    <text x="64" y="440" fill="#ffffff" font-size="170" letter-spacing="-6">N. 01</text>
+    <text x="64" y="285" fill="#ffffff" font-size="128" letter-spacing="-4">25.10</text>
+    <text x="64" y="440" fill="#ffffff" font-size="170" letter-spacing="-6">2026</text>
     <text x="70" y="545" fill="#d5d5d5" font-size="30" font-weight="700">Decreto IA · Docenti · Europa</text>
   </g>
 </svg>
