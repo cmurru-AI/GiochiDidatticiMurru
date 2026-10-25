@@ -1,0 +1,15 @@
+[
+  {
+    "id": "primo-gioco",
+    "titolo": "Gioco di prova",
+    "tipo": "gioco",
+    "materia": "matematica",
+    "destinatari": ["studenti"],
+    "descrizione": "Il primo gioco pubblicato su Officina Didattica.",
+    "percorso": "giochi/primo-gioco/",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-24",
+    "paroleChiave": ["matematica", "tabelline", "moltiplicazioni"]
+  }
+]
