@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" role="img" aria-labelledby="t">
+  <title id="t">Docenti che usano l'IA: dal 57% al 69%; per alunni con BES o disabilità: dal 10% al 18,8%</title>
+  <rect width="800" height="400" fill="#ffffff"/>
+  <g font-family="Arial, Helvetica, sans-serif" fill="#111111">
+    <text x="30" y="50" font-size="24" font-weight="900">Usano l'IA nella didattica</text>
+    <text x="30" y="106" font-size="22" font-weight="700">2025</text>
+    <rect x="110" y="78" width="342" height="44" fill="#cfcfcf" stroke="#111111" stroke-width="3"/>
+    <text x="466" y="110" font-size="30" font-weight="900">57%</text>
+    <text x="30" y="166" font-size="22" font-weight="700">2026</text>
+    <rect x="110" y="138" width="414" height="44" fill="#3155ff" stroke="#111111" stroke-width="3"/>
+    <text x="538" y="170" font-size="30" font-weight="900">69%</text>
+
+    <text x="30" y="250" font-size="24" font-weight="900">La usano per alunni con BES o disabilità</text>
+    <text x="30" y="306" font-size="22" font-weight="700">2025</text>
+    <rect x="110" y="278" width="60" height="44" fill="#cfcfcf" stroke="#111111" stroke-width="3"/>
+    <text x="184" y="310" font-size="30" font-weight="900">10%</text>
+    <text x="30" y="366" font-size="22" font-weight="700">2026</text>
+    <rect x="110" y="338" width="113" height="44" fill="#ff3d81" stroke="#111111" stroke-width="3"/>
+    <text x="237" y="370" font-size="30" font-weight="900">18,8%</text>
+  </g>
+</svg>

@@ -81,10 +81,10 @@
 
   function valida(voce, tipo) {
     var ok = voce && voce.id && voce.titolo && voce.descrizione &&
-      voce.tipo === tipo && voce.stato === "pubblicato" &&
+      tipo.indexOf(voce.tipo) !== -1 && voce.stato === "pubblicato" &&
       PERCORSO_VALIDO.test(voce.percorso || "") &&
       (!voce.copertina || IMMAGINE_VALIDA.test(voce.copertina));
-    if (voce && voce.tipo === tipo && voce.stato === "pubblicato" && !ok) {
+    if (voce && tipo.indexOf(voce.tipo) !== -1 && voce.stato === "pubblicato" && !ok) {
       console.warn("Voce del catalogo non valida:", voce.id || voce);
     }
     return ok;
@@ -101,7 +101,7 @@
       img.alt = "";
       cover.appendChild(img);
     } else {
-      cover.textContent = String(numero).padStart(2, "0");
+      cover.textContent = dati.numero || String(numero).padStart(2, "0");
     }
 
     body.appendChild(crea("div", "tag", dati.tag));
@@ -109,7 +109,7 @@
     body.appendChild(crea("p", null, dati.descrizione));
 
     if (dati.percorso) {
-      var link = crea("a", "game-link", "Gioca ora →");
+      var link = crea("a", "game-link", dati.azione || "Gioca ora →");
       link.href = new URL(dati.percorso, RADICE).href;
       body.appendChild(link);
     } else {
@@ -121,7 +121,28 @@
     return card;
   }
 
+  // "2026-10-25" → "25 ottobre 2026"
+  var MESI = ["gennaio", "febbraio", "marzo", "aprile", "maggio", "giugno", "luglio",
+    "agosto", "settembre", "ottobre", "novembre", "dicembre"];
+  function dataEstesa(iso) {
+    var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    return p ? Number(p[3]) + " " + MESI[Number(p[2]) - 1] + " " + p[1] : "";
+  }
+
   function datiCard(voce) {
+    // Articoli e report: tipo e data al posto di materia e classe
+    if (voce.tipo !== "gioco") {
+      return {
+        tag: [voce.rubrica || etichetta(voce.tipo), dataEstesa(voce.dataPubblicazione)].filter(Boolean).join(" · "),
+        titolo: voce.titolo,
+        descrizione: voce.descrizione,
+        percorso: voce.percorso,
+        copertina: voce.copertina,
+        azione: "Leggi →",
+        // Senza copertina, al posto del numero compare la data (es. 25.10)
+        numero: (voce.dataPubblicazione || "").split("-").reverse().slice(0, 2).join(".")
+      };
+    }
     var parti = [voce.materia ? etichetta(voce.materia) : "Gioco"];
     if (classiDi(voce).length) parti.push(etichettaClassi(classiDi(voce)));
     return {
@@ -272,7 +293,7 @@
     })
     .then(function (catalogo) {
       griglie.forEach(function (griglia) {
-        var tipo = griglia.getAttribute("data-catalogo");
+        var tipo = griglia.getAttribute("data-catalogo").split(",");
         var limite = Number(griglia.getAttribute("data-limite")) || Infinity;
         var segnaposto = Number(griglia.getAttribute("data-segnaposto")) || 0;
         // Dal più recente; a parità di data, prima l'ultimo aggiunto al catalogo
