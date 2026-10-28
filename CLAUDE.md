@@ -161,6 +161,7 @@ Quando il sito supera la singola pagina iniziale, usare un foglio di stile condi
 assets/css/style.css
 ```
 Le modifiche grafiche comuni devono essere centralizzate.
+Ogni pagina del sito include nel `<head>`, come le pagine esistenti: icona (`assets/icone/`), descrizione e metadati di condivisione (`og:` con immagine PNG 1200×630). L'immagine di condivisione generale è `assets/immagini/condivisione.png`.
 ---
 10. Gestione dei giochi HTML
 Ogni gioco deve:
@@ -417,7 +418,7 @@ Titolo: la notizia principale della settimana. Etichetta: “IA in classe · dat
 Fonti: scelte ogni volta tra fonti affidabili (istituzioni, produttori degli strumenti, testate riconosciute); esclusi blog anonimi, siti che copiano notizie altrui e contenuti sponsorizzati.
 Verifica: ogni notizia va controllata aprendo la fonte originale (testo di legge, rapporto, comunicato). Se la fonte non si apre o non conferma, la notizia non si pubblica. Segnalare nel testo gli errori che circolano, quando la verifica li fa emergere.
 Trasparenza: ogni uscita termina con la nota «Officina Didattica · Carlo Murru. Le notizie sono state cercate, verificate sulle fonti originali e sintetizzate con il supporto dell’intelligenza artificiale; l’autore le ha scelte, riviste e approvate prima della pubblicazione. Testo con licenza CC BY 4.0.»
-Immagini: solo grafiche create per il sito (copertina SVG in `assets/copertine/`, grafici SVG quando i dati lo meritano), con testo alternativo. Mai immagini prese dalle fonti. Eventuali foto di Carlo: nessun volto, nome o dato degli studenti.
+Immagini: solo grafiche create per il sito (copertina SVG in `assets/copertine/`, più la stessa copertina in PNG per l'anteprima di condivisione; grafici SVG quando i dati lo meritano), con testo alternativo. Mai immagini prese dalle fonti. Eventuali foto di Carlo: nessun volto, nome o dato degli studenti.
 Pagina: `ia-didattica/ia-in-classe-AAAA-MM-GG/index.html`, sul modello delle uscite già pubblicate; voce nel catalogo con `tipo: "report"` e `rubrica: "IA in classe"`.
 Flusso:
 ```text

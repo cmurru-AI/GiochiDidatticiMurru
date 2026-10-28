@@ -234,6 +234,7 @@ nav a[aria-current="page"]::after {
 
 .button.secondary {
   background: var(--bianco);
+  color: var(--nero);
 }
 
 .button.secondary:hover {
@@ -404,6 +405,7 @@ nav a[aria-current="page"]::after {
 }
 
 .resource {
+  position: relative;
   padding: 30px;
   min-height: 260px;
   border-right: 3px solid var(--nero);
@@ -412,20 +414,47 @@ nav a[aria-current="page"]::after {
   transition: background 0.15s ease;
 }
 
-.resource:nth-child(1):hover {
+/* Solo le categorie già disponibili sono cliccabili */
+.resource:has(.resource-link):hover {
   background: var(--giallo);
 }
 
-.resource:nth-child(2):hover {
-  background: var(--verde);
+.resource-link {
+  text-decoration: none;
 }
 
-.resource:nth-child(3):hover {
-  background: #dfe5ff;
+.resource-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
-.resource:nth-child(4):hover {
-  background: #ffdce8;
+.resource-link:focus-visible {
+  outline: none;
+}
+
+.resource:has(.resource-link:focus-visible) {
+  outline: 4px solid var(--blu);
+  outline-offset: -10px;
+}
+
+.resource-go,
+.resource-status {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.resource-go {
+  border-bottom: 3px solid var(--nero);
+}
+
+.resource-status {
+  padding: 4px 8px;
+  border: 2px dashed var(--grigio-testo);
+  color: var(--grigio-testo);
 }
 
 .resource-index {
