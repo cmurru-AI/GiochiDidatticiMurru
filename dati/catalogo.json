@@ -191,5 +191,30 @@
       "grammatica",
       "mappa concettuale"
     ]
+  },
+  {
+    "id": "mappa-analisi-grammaticale-del-verbo",
+    "titolo": "Analisi grammaticale del verbo",
+    "tipo": "mappa",
+    "materia": "italiano",
+    "classe": [
+      "5-primaria",
+      "1-secondaria"
+    ],
+    "destinatari": [
+      "studenti"
+    ],
+    "descrizione": "Le sei domande per analizzare un verbo: coniugazione, modo, tempo, persona e numero, genere, forma. Con un esempio guidato.",
+    "percorso": "mappe/mappa-analisi-grammaticale-del-verbo/",
+    "copertina": "assets/copertine/mappa-analisi-grammaticale-del-verbo.svg",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-28",
+    "paroleChiave": [
+      "verbo",
+      "analisi grammaticale",
+      "grammatica",
+      "mappa concettuale"
+    ]
   }
 ]
