@@ -129,9 +129,21 @@
     return p ? Number(p[3]) + " " + MESI[Number(p[2]) - 1] + " " + p[1] : "";
   }
 
+  // Testi che cambiano con il tipo di materiale
+  var TIPI = {
+    gioco: { azione: "Gioca ora →", uno: "gioco", molti: "giochi", filtro: "Giochi" },
+    mappa: { azione: "Apri la mappa →", uno: "mappa", molti: "mappe", filtro: "Mappe" },
+    scheda: { azione: "Apri la scheda →", uno: "scheda", molti: "schede", filtro: "Schede" }
+  };
+  var TIPO_GENERICO = { azione: "Apri →", uno: "materiale", molti: "materiali" };
+
+  function infoTipo(tipo) {
+    return TIPI[tipo] || TIPO_GENERICO;
+  }
+
   function datiCard(voce) {
     // Articoli e report: tipo e data al posto di materia e classe
-    if (voce.tipo !== "gioco") {
+    if (voce.tipo === "report" || voce.tipo === "articolo") {
       return {
         tag: [voce.rubrica || etichetta(voce.tipo), dataEstesa(voce.dataPubblicazione)].filter(Boolean).join(" · "),
         titolo: voce.titolo,
@@ -143,14 +155,15 @@
         numero: (voce.dataPubblicazione || "").split("-").reverse().slice(0, 2).join(".")
       };
     }
-    var parti = [voce.materia ? etichetta(voce.materia) : "Gioco"];
+    var parti = [voce.materia ? etichetta(voce.materia) : etichetta(voce.tipo)];
     if (classiDi(voce).length) parti.push(etichettaClassi(classiDi(voce)));
     return {
       tag: parti.join(" · "),
       titolo: voce.titolo,
       descrizione: voce.descrizione,
       percorso: voce.percorso,
-      copertina: voce.copertina
+      copertina: voce.copertina,
+      azione: infoTipo(voce.tipo).azione
     };
   }
 
@@ -179,8 +192,9 @@
 
   // ---------- Filtri: scuola, classe, materia ----------
 
-  function avviaFiltri(contenitore, griglia, voci) {
-    var CHIAVI = ["per", "scuola", "classe", "materia"];
+  function avviaFiltri(contenitore, griglia, voci, tipi) {
+    var CHIAVI = ["tipo", "per", "scuola", "classe", "materia"];
+    var parole = tipi.length === 1 ? infoTipo(tipi[0]) : TIPO_GENERICO;
     var parametri = new URLSearchParams(location.search);
     var scelta = {};
     CHIAVI.forEach(function (k) { scelta[k] = parametri.get(k) || ""; });
@@ -189,7 +203,8 @@
 
     function corrisponde(voce, salta) {
       var classi = classiDi(voce);
-      return (salta === "per" || !scelta.per || destinatariDi(voce).indexOf(scelta.per) !== -1) &&
+      return (salta === "tipo" || !scelta.tipo || voce.tipo === scelta.tipo) &&
+        (salta === "per" || !scelta.per || destinatariDi(voce).indexOf(scelta.per) !== -1) &&
         (salta === "scuola" || !scelta.scuola || classi.some(function (c) {
           return leggiClasse(c).scuola === scelta.scuola;
         })) &&
@@ -205,6 +220,7 @@
       }).forEach(function (v) {
         if (chiave === "materia" && v.materia) trovati[v.materia] = true;
         if (chiave === "per") destinatariDi(v).forEach(function (d) { trovati[d] = true; });
+        if (chiave === "tipo") trovati[v.tipo] = true;
         classiDi(v).forEach(function (c) {
           if (chiave === "classe" && (!scelta.scuola || leggiClasse(c).scuola === scelta.scuola)) trovati[c] = true;
           if (chiave === "scuola") trovati[leggiClasse(c).scuola] = true;
@@ -218,6 +234,7 @@
     }
 
     var GRUPPI = [
+      { chiave: "tipo", titolo: "Tipo", tutti: "Tutti", nome: function (t) { return infoTipo(t).filtro || etichetta(t); } },
       { chiave: "per", titolo: "Per chi", tutti: "Tutti", nome: etichetta },
       { chiave: "scuola", titolo: "Scuola", tutti: "Tutte", nome: etichetta },
       { chiave: "classe", titolo: "Classe", tutti: "Tutte", nome: etichettaClasse },
@@ -273,8 +290,8 @@
       var risultato = voci.filter(function (v) { return corrisponde(v); });
       disegna();
       conteggio.textContent = risultato.length === 1
-        ? "1 gioco"
-        : risultato.length + " giochi";
+        ? "1 " + parole.uno
+        : risultato.length + " " + parole.molti;
       mostra(griglia, risultato, 0);
     }
 
@@ -307,7 +324,7 @@
         var filtri = document.querySelector("[data-filtri]");
 
         if (filtri && limite === Infinity) {
-          avviaFiltri(filtri, griglia, voci);
+          avviaFiltri(filtri, griglia, voci, tipo);
         } else {
           mostra(griglia, voci.slice(0, limite), segnaposto);
         }

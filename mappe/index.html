@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Mappe · Officina Didattica</title>
+  <meta name="description" content="Mappe concettuali per capire e ripassare, da consultare, scaricare e stampare.">
+
+  <link rel="icon" href="../assets/icone/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icone/apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Officina Didattica">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:title" content="Mappe · Officina Didattica">
+  <meta property="og:description" content="Mappe concettuali per capire e ripassare, da consultare, scaricare e stampare.">
+  <meta property="og:url" content="https://cmurru-ai.github.io/OfficinaDidattica/mappe/">
+  <meta property="og:image" content="https://cmurru-ai.github.io/OfficinaDidattica/assets/immagini/condivisione.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <script>
+    document.documentElement.classList.add("js");
+  </script>
+
+  <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+
+<body>
+
+  <a href="#contenuto" class="skip-link">Salta al contenuto</a>
+
+  <!-- HEADER -->
+
+  <header class="topbar">
+
+    <a href="../" class="logo">
+      Officina <span>Didattica</span>
+    </a>
+
+    <button type="button" class="menu-toggle" aria-expanded="false" aria-controls="menu-principale">
+      Menu
+    </button>
+
+    <nav id="menu-principale" aria-label="Menu principale">
+      <a href="../#risorse">Risorse</a>
+      <a href="../giochi/">Giochi</a>
+      <a href="../#ia">IA e didattica</a>
+      <a href="../#chisono">Chi sono</a>
+    </nav>
+
+  </header>
+
+
+  <main id="contenuto" tabindex="-1">
+
+  <!-- TUTTI I GIOCHI -->
+
+  <section class="section games">
+
+    <div class="section-label">
+      Capire e ripassare
+    </div>
+
+    <h1 class="section-title">
+      Mappe
+    </h1>
+
+    <p class="post-lead">
+      Mappe concettuali da consultare in classe o a casa, da scaricare e stampare.
+    </p>
+
+    <div class="filters" data-filtri></div>
+
+    <h2 class="visually-hidden">Elenco delle mappe</h2>
+
+    <div class="game-grid" data-catalogo="mappa" aria-live="polite">
+
+      <p class="game-grid-message solo-js">
+        Caricamento delle mappe…
+      </p>
+
+      <noscript>
+        <p class="game-grid-message">
+          Per vedere l'elenco delle mappe attiva JavaScript nel browser.
+        </p>
+      </noscript>
+
+    </div>
+
+  </section>
+
+  </main>
+
+
+  <!-- FOOTER -->
+
+  <footer>
+
+    <div class="footer-main">
+
+      <strong>
+        Officina Didattica
+      </strong>
+
+      <span>
+        Materiali, idee e strumenti per imparare e insegnare meglio.
+      </span>
+
+      <span class="footer-license">
+        Giochi e materiali con licenza
+        <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.it" rel="license">CC BY-NC-SA 4.0</a>
+      </span>
+
+    </div>
+
+
+    <div class="footer-author">
+
+      <strong>
+        Carlo Murru
+      </strong>
+
+      <br>
+
+      Animatore Digitale<br>
+      Istituto Comprensivo Villamar
+
+    </div>
+
+  </footer>
+
+  <script src="../assets/js/catalogo.js"></script>
+  <script src="../assets/js/menu.js"></script>
+
+</body>
+</html>
