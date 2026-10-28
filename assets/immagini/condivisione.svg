@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <rect width="1200" height="630" fill="#ffffff"/>
+  <rect x="800" y="0" width="400" height="630" fill="#3155ff"/>
+  <line x1="800" y1="0" x2="800" y2="630" stroke="#111111" stroke-width="6"/>
+  <rect x="850" y="70" width="210" height="210" fill="#ffe500" stroke="#111111" stroke-width="5" transform="rotate(8 955 175)"/>
+  <rect x="1070" y="-30" width="90" height="280" fill="#7cff6b" stroke="#111111" stroke-width="5" transform="rotate(-14 1115 110)"/>
+  <circle cx="1060" cy="460" r="110" fill="#ff3d81" stroke="#111111" stroke-width="5"/>
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="900" fill="#111111">
+    <rect x="70" y="70" width="218" height="42" fill="#ff3d81"/>
+    <text x="84" y="100" font-size="24" fill="#111111">CARLO MURRU</text>
+    <text x="70" y="215" font-size="88" letter-spacing="-4">OFFICINA</text>
+    <rect x="62" y="240" width="460" height="100" fill="#ffe500"/>
+    <text x="70" y="320" font-size="88" letter-spacing="-4">DIDATTICA</text>
+    <text x="70" y="430" font-size="40" letter-spacing="-1">MATERIALI DA USARE.</text>
+    <text x="70" y="480" font-size="40" letter-spacing="-1">IDEE DA PROVARE.</text>
+    <text x="70" y="560" font-size="24" font-weight="700" fill="#5d5d5d">Giochi, risorse didattiche e IA per la scuola</text>
+  </g>
+</svg>
