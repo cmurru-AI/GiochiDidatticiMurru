@@ -141,5 +141,55 @@
       "formazione docenti",
       "prompt"
     ]
+  },
+  {
+    "id": "mappa-frazioni",
+    "titolo": "Mappa concettuale sulle frazioni",
+    "tipo": "mappa",
+    "materia": "matematica",
+    "classe": [
+      "1-secondaria",
+      "2-secondaria"
+    ],
+    "destinatari": [
+      "studenti"
+    ],
+    "descrizione": "Che cosa sono le frazioni, come si rappresentano, frazioni particolari ed equivalenti, confronto, operazioni e numeri decimali.",
+    "percorso": "mappe/mappa-frazioni/",
+    "copertina": "assets/copertine/mappa-frazioni.webp",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-28",
+    "paroleChiave": [
+      "frazioni",
+      "mappa concettuale",
+      "operazioni",
+      "numeri decimali"
+    ]
+  },
+  {
+    "id": "mappa-modi-dei-verbi",
+    "titolo": "Mappa dei modi dei verbi",
+    "tipo": "mappa",
+    "materia": "italiano",
+    "classe": [
+      "5-primaria",
+      "1-secondaria"
+    ],
+    "destinatari": [
+      "studenti"
+    ],
+    "descrizione": "I sette modi del verbo: indicativo, congiuntivo, condizionale e imperativo; infinito, participio e gerundio. Con esempi.",
+    "percorso": "mappe/mappa-modi-dei-verbi/",
+    "copertina": "assets/copertine/mappa-modi-dei-verbi.webp",
+    "autore": "Carlo Murru",
+    "stato": "pubblicato",
+    "dataPubblicazione": "2026-10-28",
+    "paroleChiave": [
+      "verbo",
+      "modi verbali",
+      "grammatica",
+      "mappa concettuale"
+    ]
   }
 ]
