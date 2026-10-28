@@ -353,6 +353,7 @@ ricerca;
 sintesi;
 automazione.
 Non attribuire automaticamente all’IA la paternità dei materiali originali.
+Trasparenza (decisione di Carlo, ottobre 2026): ogni materiale pubblicato realizzato con il supporto dell’IA (immagini generate, testi o contenuti preparati con l’IA) lo dichiara in fondo alla pagina, ad esempio: «Mappa realizzata con il supporto dell’intelligenza artificiale e verificata dall’autore.»
 Non modificare contenuti didattici sostanziali senza richiesta.
 ---
 16. Licenze
